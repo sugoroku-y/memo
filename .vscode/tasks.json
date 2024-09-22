@@ -1,0 +1,28 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "typescript",
+			"tsconfig": "tsconfig.json",
+			"option": "watch",
+			"problemMatcher": [
+				"$tsc-watch"
+			],
+			"group": "build",
+			"label": "tsc: watch"
+		},
+		{
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"dart-sass",
+				"css/",
+				"--watch"
+			],
+			"label": "dart-sass: watch",
+			"problemMatcher": [
+				"$node-sass"
+			]
+		}
+	]
+}

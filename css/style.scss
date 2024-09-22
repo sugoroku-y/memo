@@ -1,0 +1,130 @@
+@import 'colors';
+
+$colors: $light;
+
+body {
+  background-color: map-get($colors, 'background');
+  color: map-get($colors, 'foreground');
+  font-size: 15px;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+a:visited {
+  color: map-get($colors, 'visited');
+}
+
+a {
+  color: map-get($colors, 'link');
+}
+
+pre,
+code,
+th {
+  background-color: map-get($colors, 'emphasis');
+}
+
+td {
+  border-right: solid 1px map-get($colors, 'emphasis');
+  border-bottom: solid 1px map-get($colors, 'emphasis');
+}
+
+pre {
+  padding: 5px;
+}
+
+code::before,
+code::after {
+  content: '`';
+}
+
+em::before,
+em::after {
+  content: '*';
+}
+
+strong::before,
+strong::after {
+  content: '**';
+}
+
+strike::before,
+strike::after {
+  content: '~~';
+}
+
+@media (prefers-color-scheme: dark) {
+  $colors: $dark;
+  body {
+    background-color: map-get($colors, 'background');
+    color: map-get($colors, 'foreground');
+  }
+
+  a:visited {
+    color: map-get($colors, 'visited');
+  }
+
+  a {
+    color: map-get($colors, 'link');
+  }
+
+  pre,
+  code,
+  th {
+    background-color: map-get($colors, 'emphasis');
+  }
+
+  td {
+    border-right: solid 1px map-get($colors, 'emphasis');
+    border-bottom: solid 1px map-get($colors, 'emphasis');
+  }
+}
+
+h1, h2, h3, h4, h5 {
+  font-weight: bold;
+}
+h1 {
+  font-size: 32px;
+}
+h2 {
+  font-size: 24px;
+}
+
+h3 {
+  font-size: 18px;
+}
+
+h4 {
+  font-size: 15px;
+}
+
+h5 {
+  font-size: 12px;
+}
+
+ul>li {
+  &::marker {
+    content: '- ';
+  }
+  input[type='checkbox'] {
+    margin-right: 5px;
+  }
+}
+
+#contentBox {
+  width: calc(100% - 2px);
+  height: calc(100% - 2px);
+  padding: 1px;
+}
+
+#passwordPromptDialog {
+  border: none;
+  border-radius: 16px;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
