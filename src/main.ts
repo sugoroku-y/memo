@@ -3,7 +3,7 @@ declare const contentBox: HTMLDivElement;
 window.addEventListener('load', () => {
   new MutationObserver(_mutations => {
     (async () => {
-      const data = getFocusInfo();
+      const data = getFocusInfo(contentBox);
       const encoded = await encodeHash(contentBox.innerHTML);
       if (location.hash.slice(1) === encoded) {
         return;
@@ -24,7 +24,7 @@ window.addEventListener('load', () => {
     characterDataOldValue: true,
   });
   window.addEventListener('popstate', () => {
-    void applyHash();
+    void applyHash(contentBox);
   });
-  applyHash();
+  applyHash(contentBox);
 });

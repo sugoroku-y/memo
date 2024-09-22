@@ -1,7 +1,7 @@
-function getFocusInfo() {
+function getFocusInfo(root: HTMLDivElement) {
   const {focusNode, focusOffset} = getSelection() ?? {};
   const indices = [];
-  for (let node = focusNode; node && node !== contentBox; node = node.parentElement) {
+  for (let node = focusNode; node && node !== root; node = node.parentElement) {
     if (!node) {
       indices.length = 0;
       break;
