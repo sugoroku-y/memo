@@ -316,236 +316,231 @@ const keymap: Record<
     // キャレットのあった位置を復元
     sel.setPosition(focusNode, focusOffset);
   },
-        // テーブルのセル間移動
-        [ 'ctrl+ArrowDown'](_,ev){
-            const focusNode = getSelection()!.focusNode;
-            const focusElement = ensureElement(focusNode);
-            const td = focusElement?.closest('td,th');
-            const tr = td?.closest('tr');
-            if (td && tr) {
-              ev.preventDefault();
-              // テーブルのセル上にキャレットがあれば下のセルにキャレット移動
-              const cells = tr.querySelectorAll(`tr > ${td.localName}`);
-              const index = indexOf(cells, td) ?? 0;
-              const nextRow = tr.nextElementSibling;
-              if (nextRow) {
-                const nextTd = nextRow.querySelector(
-                  `td:nth-of-type(${index + 1}), th:nth-of-type(${index + 1})`
-                );
-                getSelection()!.setPosition(nextTd?.firstChild ?? null, 0);
-              } else {
-                const newTr = tr.parentElement!.appendChild(
-                  document.createElement('tr')
-                );
-                const cellCount = cells.length;
-                let focusCell;
-                for (let i = 0; i < cellCount; ++i) {
-                  const newTd = newTr.appendChild(document.createElement('td'));
-                  newTd.appendChild(document.createElement('br'));
-                  if (i === index) {
-                    focusCell = newTd;
-                  }
-                }
-                getSelection()!.setPosition(focusCell?.firstChild ?? null, 0);
-              }
-            }
-          },
-        // テーブルのセル間移動
-        [ 'ctrl+ArrowUp'](_, ev){
-            const focusNode = getSelection()!.focusNode;
-            const focusElement = ensureElement(focusNode);
-            const td = focusElement?.closest('td,th');
-            if (td) {
-              ev.preventDefault();
-              // テーブルのセル上にキャレットがあれば上のセルにキャレット移動
-              const tr = td.closest('tr');
-              const prevRow = tr?.previousElementSibling;
-              if (prevRow) {
-                const index = indexOf(tr.querySelectorAll(`tr > ${td.localName}`), td) ?? 0;
-                const prevTd = prevRow.querySelector(
-                  `td:nth-of-type(${index + 1}),th:nth-of-type(${index + 1})`
-                );
-                getSelection()?.setPosition(prevTd?.firstChild ?? null, 0);
-              }
-            }
-          },
-        // テーブルのセル間移動
-         ['ctrl+ArrowRight'](_,ev){
-            const focusNode = getSelection()!.focusNode;
-            const focusElement = ensureElement(focusNode);
-            const td = focusElement?.closest('td,th');
-            if (td) {
-              ev.preventDefault();
-              // テーブルのセル上にキャレットがあれば右のセルにキャレット移動
-              let nextCell = td.nextElementSibling;
-              if (!nextCell) {
-                const tr = td.closest('tr');
-                const table = tr?.closest('table');
-                const index =
-                  tr?.querySelectorAll(`tr > ${td.localName}`).length ?? 0;
-                for (const row of table?.querySelectorAll('tr') ?? []) {
-                  const localName = row.querySelector('td,th')!.localName;
-                  while (
-                    index >= row.querySelectorAll(`tr > th, tr > td`).length
-                  ) {
-                    const cell = row.appendChild(
-                      document.createElement(localName)
-                    );
-                    cell.appendChild(document.createElement('br'));
-                  }
-                }
-                nextCell = td.nextElementSibling;
-              }
-              getSelection()!.setPosition(nextCell?.firstChild ?? null, 0);
-            }
-          },
-        // テーブルのセル間移動
-        [ 'ctrl+ArrowLeft'](_,ev)
-          {
-            const focusNode = getSelection()!.focusNode;
-            const focusElement = ensureElement(focusNode);
-            const td = focusElement?.closest('td,th');
-            if (td) {
-              ev.preventDefault();
-              // テーブルのセル上にキャレットがあれば左のセルにキャレット移動
-              const prevCell = td.previousElementSibling;
-              if (prevCell) {
-                getSelection()!.setPosition(prevCell.firstChild, 0);
-              }
-            }
-          },
-        // テーブルのセル削除
-        Delete(root, ev) {
-          this.Backspace(root, ev)
-        },
-        Backspace(root, ev){
-            const focusNode = getSelection()!.focusNode;
-            const focusElement = ensureElement(focusNode);
-            const td = focusElement?.closest('td,th');
-            if (
-              td &&
-              asElement(td.firstChild)?.localName === 'br' &&
-              td.firstChild!.nextSibling == null
-            ) {
-              // 空のセル上にキャレットがあればセルを削除
-              ev.preventDefault();
-              const tr = td.closest('tr');
-              const table = tr?.closest('table');
-              const forwardFocusNode =
-                td.nextElementSibling?.firstChild ??
-                tr?.nextElementSibling?.querySelector(
-                  'td:first-child,th:first-child'
-                )?.firstChild ??
-                table?.nextElementSibling?.firstChild;
-              const backwardFocusNode =
-                td.previousElementSibling?.lastChild ??
-                tr?.previousElementSibling?.querySelector(
-                  'td:last-child,th:last-child'
-                )?.lastChild ??
-                table?.previousElementSibling?.lastChild;
-              const focusNode =
-                ev.key === 'Delete'
-                  ? forwardFocusNode ?? backwardFocusNode ?? root
-                  : // Backspaceの場合は削除後のキャレット位置が逆
-                    backwardFocusNode ?? forwardFocusNode ?? root;
-              const focusOffset =
-                focusNode === backwardFocusNode
-                  ? (focusNode as Text).data?.length ?? 0
-                  : 0;
-              td.remove();
-              if (tr && !tr.firstChild) {
-                tr.remove();
-                if (table && !table.querySelector('tr')) {
-                  table.remove();
-                }
-              }
-              getSelection()!.setPosition(focusNode, focusOffset);
-            }
-          },
-        // Undo
-  ['ctrl+z'](_,ev) {
+  // テーブルのセル間移動
+  ['ctrl+ArrowDown'](_, ev) {
+    const focusNode = getSelection()!.focusNode;
+    const focusElement = ensureElement(focusNode);
+    const td = focusElement?.closest('td,th');
+    const tr = td?.closest('tr');
+    if (td && tr) {
+      ev.preventDefault();
+      // テーブルのセル上にキャレットがあれば下のセルにキャレット移動
+      const cells = tr.querySelectorAll(`tr > ${td.localName}`);
+      const index = indexOf(cells, td) ?? 0;
+      const nextRow = tr.nextElementSibling;
+      if (nextRow) {
+        const nextTd = nextRow.querySelector(
+          `td:nth-of-type(${index + 1}), th:nth-of-type(${index + 1})`
+        );
+        getSelection()!.setPosition(nextTd?.firstChild ?? null, 0);
+      } else {
+        const newTr = tr.parentElement!.appendChild(
+          document.createElement('tr')
+        );
+        const cellCount = cells.length;
+        let focusCell;
+        for (let i = 0; i < cellCount; ++i) {
+          const newTd = newTr.appendChild(document.createElement('td'));
+          newTd.appendChild(document.createElement('br'));
+          if (i === index) {
+            focusCell = newTd;
+          }
+        }
+        getSelection()!.setPosition(focusCell?.firstChild ?? null, 0);
+      }
+    }
+  },
+  // テーブルのセル間移動
+  ['ctrl+ArrowUp'](_, ev) {
+    const focusNode = getSelection()!.focusNode;
+    const focusElement = ensureElement(focusNode);
+    const td = focusElement?.closest('td,th');
+    if (td) {
+      ev.preventDefault();
+      // テーブルのセル上にキャレットがあれば上のセルにキャレット移動
+      const tr = td.closest('tr');
+      const prevRow = tr?.previousElementSibling;
+      if (prevRow) {
+        const index =
+          indexOf(tr.querySelectorAll(`tr > ${td.localName}`), td) ?? 0;
+        const prevTd = prevRow.querySelector(
+          `td:nth-of-type(${index + 1}),th:nth-of-type(${index + 1})`
+        );
+        getSelection()?.setPosition(prevTd?.firstChild ?? null, 0);
+      }
+    }
+  },
+  // テーブルのセル間移動
+  ['ctrl+ArrowRight'](_, ev) {
+    const focusNode = getSelection()!.focusNode;
+    const focusElement = ensureElement(focusNode);
+    const td = focusElement?.closest('td,th');
+    if (td) {
+      ev.preventDefault();
+      // テーブルのセル上にキャレットがあれば右のセルにキャレット移動
+      let nextCell = td.nextElementSibling;
+      if (!nextCell) {
+        const tr = td.closest('tr');
+        const table = tr?.closest('table');
+        const index = tr?.querySelectorAll(`tr > ${td.localName}`).length ?? 0;
+        for (const row of table?.querySelectorAll('tr') ?? []) {
+          const localName = row.querySelector('td,th')!.localName;
+          while (index >= row.querySelectorAll(`tr > th, tr > td`).length) {
+            const cell = row.appendChild(document.createElement(localName));
+            cell.appendChild(document.createElement('br'));
+          }
+        }
+        nextCell = td.nextElementSibling;
+      }
+      getSelection()!.setPosition(nextCell?.firstChild ?? null, 0);
+    }
+  },
+  // テーブルのセル間移動
+  ['ctrl+ArrowLeft'](_, ev) {
+    const focusNode = getSelection()!.focusNode;
+    const focusElement = ensureElement(focusNode);
+    const td = focusElement?.closest('td,th');
+    if (td) {
+      ev.preventDefault();
+      // テーブルのセル上にキャレットがあれば左のセルにキャレット移動
+      const prevCell = td.previousElementSibling;
+      if (prevCell) {
+        getSelection()!.setPosition(prevCell.firstChild, 0);
+      }
+    }
+  },
+  // テーブルのセル削除
+  Delete(root, ev) {
+    this.Backspace(root, ev);
+  },
+  Backspace(root, ev) {
+    const focusNode = getSelection()!.focusNode;
+    const focusElement = ensureElement(focusNode);
+    const td = focusElement?.closest('td,th');
+    if (
+      td &&
+      asElement(td.firstChild)?.localName === 'br' &&
+      td.firstChild!.nextSibling == null
+    ) {
+      // 空のセル上にキャレットがあればセルを削除
+      ev.preventDefault();
+      const tr = td.closest('tr');
+      const table = tr?.closest('table');
+      const forwardFocusNode =
+        td.nextElementSibling?.firstChild ??
+        tr?.nextElementSibling?.querySelector('td:first-child,th:first-child')
+          ?.firstChild ??
+        table?.nextElementSibling?.firstChild;
+      const backwardFocusNode =
+        td.previousElementSibling?.lastChild ??
+        tr?.previousElementSibling?.querySelector('td:last-child,th:last-child')
+          ?.lastChild ??
+        table?.previousElementSibling?.lastChild;
+      const focusNode =
+        ev.key === 'Delete'
+          ? forwardFocusNode ?? backwardFocusNode ?? root
+          : // Backspaceの場合は削除後のキャレット位置が逆
+            backwardFocusNode ?? forwardFocusNode ?? root;
+      const focusOffset =
+        focusNode === backwardFocusNode
+          ? (focusNode as Text).data?.length ?? 0
+          : 0;
+      td.remove();
+      if (tr && !tr.firstChild) {
+        tr.remove();
+        if (table && !table.querySelector('tr')) {
+          table.remove();
+        }
+      }
+      getSelection()!.setPosition(focusNode, focusOffset);
+    }
+  },
+  // Undo
+  ['ctrl+z'](_, ev) {
     ev.preventDefault();
     // 編集履歴はブラウザの履歴として残っているので戻るとUndoになる
     history.back();
   },
-        // Redo
-        ['ctrl+y'](_, ev){
-          ev.preventDefault();
-          // 編集履歴はブラウザの履歴として残っているので進むとRedoになる
-          history.forward();
-          },
-         ['*'](_,ev)
-          {
-            const selection = prepareSurroundStyledText();
-            if (!selection) {
-              // まとめて1つの要素に移動できない親子関係の場合は無効
-              return;
-            }
-            if (selection.container?.closest('strong')) {
-              // すでに強い強調が設定されていたら無効
-              return;
-            }
-            // 標準のキー入力処理はキャンセル
-            ev.preventDefault();
-            {
-              // *は1文字で強調(em)、2文字で強い強調(strong)になるため、すでに強調が設定されている場合は強い強調に置き換える
-              const em = selection.container?.closest('em');
-              if (em) {
-                // emの子をstrongに移動する
-                const strong = document.createElement('strong');
-                for (const child of safeSiblings(em.firstChild)) {
-                  strong.appendChild(child);
-                }
-                // emをstrongに置き換え
-                em.parentElement?.replaceChild(strong, em);
-                // strongの先頭から末尾までを選択
-                getSelection()!.setBaseAndExtent(
-                  strong.firstChild!,
-                  0,
-                  strong.lastChild!,
-                  (strong.lastChild as Text).data.length
-                );
-                return;
-              }
-            }
-            // 選択範囲をemに入れる
-            surroundStyledText(selection, 'em');
-          },
-        ['~'](_, ev){
-            const selection = prepareSurroundStyledText();
-            if (!selection) {
-              // まとめて1つの要素に移動できない親子関係の場合は無効
-              return;
-            }
-            if (selection.container?.closest('strike')) {
-              // すでに取り消し線が設定されていたら無効
-              return;
-            }
-            // 標準のキー入力処理はキャンセル
-            ev.preventDefault();
-            // 選択範囲をstrikeに入れる
-            surroundStyledText(selection, 'strike');
+  // Redo
+  ['ctrl+y'](_, ev) {
+    ev.preventDefault();
+    // 編集履歴はブラウザの履歴として残っているので進むとRedoになる
+    history.forward();
   },
-  ['`'](_,ev){
-            const selection = prepareSurroundStyledText();
-            if (!selection) {
-              // まとめて1つの要素に移動できない親子関係の場合は無効
-              return;
-            }
-            if (selection.container?.closest('code')) {
-              // すでにコードが設定されていたら無効
-              return;
-            }
-            // 標準のキー入力処理はキャンセル
-            ev.preventDefault();
-            // 選択範囲をcodeに入れる
-            surroundStyledText(selection, 'code');
-          }
-      };
+  // 強調/強い強調
+  ['*'](_, ev) {
+    const selection = prepareSurroundStyledText();
+    if (!selection) {
+      // まとめて1つの要素に移動できない親子関係の場合は無効
+      return;
+    }
+    if (selection.container?.closest('strong')) {
+      // すでに強い強調が設定されていたら無効
+      return;
+    }
+    // 標準のキー入力処理はキャンセル
+    ev.preventDefault();
+    {
+      // *は1文字で強調(em)、2文字で強い強調(strong)になるため、すでに強調が設定されている場合は強い強調に置き換える
+      const em = selection.container?.closest('em');
+      if (em) {
+        // emの子をstrongに移動する
+        const strong = document.createElement('strong');
+        for (const child of safeSiblings(em.firstChild)) {
+          strong.appendChild(child);
+        }
+        // emをstrongに置き換え
+        em.parentElement?.replaceChild(strong, em);
+        // strongの先頭から末尾までを選択
+        getSelection()!.setBaseAndExtent(
+          strong.firstChild!,
+          0,
+          strong.lastChild!,
+          (strong.lastChild as Text).data.length
+        );
+        return;
+      }
+    }
+    // 選択範囲をemに入れる
+    surroundStyledText(selection, 'em');
+  },
+  // 取り消し線
+  ['~'](_, ev) {
+    const selection = prepareSurroundStyledText();
+    if (!selection) {
+      // まとめて1つの要素に移動できない親子関係の場合は無効
+      return;
+    }
+    if (selection.container?.closest('strike')) {
+      // すでに取り消し線が設定されていたら無効
+      return;
+    }
+    // 標準のキー入力処理はキャンセル
+    ev.preventDefault();
+    // 選択範囲をstrikeに入れる
+    surroundStyledText(selection, 'strike');
+  },
+  // コード
+  ['`'](_, ev) {
+    const selection = prepareSurroundStyledText();
+    if (!selection) {
+      // まとめて1つの要素に移動できない親子関係の場合は無効
+      return;
+    }
+    if (selection.container?.closest('code')) {
+      // すでにコードが設定されていたら無効
+      return;
+    }
+    // 標準のキー入力処理はキャンセル
+    ev.preventDefault();
+    // 選択範囲をcodeに入れる
+    surroundStyledText(selection, 'code');
+  },
+};
 async function prepareEditor(root: HTMLDivElement) {
   document.addEventListener(
     'keydown',
-    ev => 
+    ev =>
       keymap[
         `${ev.ctrlKey ? 'ctrl+' : ''}${ev.altKey ? 'alt+' : ''}${ev.key}`
       ]?.(root, ev),
