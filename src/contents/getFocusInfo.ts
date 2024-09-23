@@ -6,9 +6,7 @@ function getFocusInfo(root: HTMLDivElement) {
       indices.length = 0;
       break;
     }
-    const index = node.parentElement?.childNodes
-      .entries()
-      .find(([, child]) => child === node)?.[0];
+    const index = indexOf(node.parentElement?.childNodes, node);
     if (index === undefined) {
       break;
     }

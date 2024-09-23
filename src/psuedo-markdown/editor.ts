@@ -326,7 +326,7 @@ const keymap: Record<
               ev.preventDefault();
               // テーブルのセル上にキャレットがあれば下のセルにキャレット移動
               const cells = tr.querySelectorAll(`tr > ${td.localName}`);
-              const index = cells.entries().find(([, e]) => e === td)?.[0] ?? 0;
+              const index = indexOf(cells, td) ?? 0;
               const nextRow = tr.nextElementSibling;
               if (nextRow) {
                 const nextTd = nextRow.querySelector(
@@ -361,11 +361,7 @@ const keymap: Record<
               const tr = td.closest('tr');
               const prevRow = tr?.previousElementSibling;
               if (prevRow) {
-                const index =
-                  tr
-                    .querySelectorAll(`tr > ${td.localName}`)
-                    .entries()
-                    .find(([, e]) => e === td)?.[0] ?? 0;
+                const index = indexOf(tr.querySelectorAll(`tr > ${td.localName}`), td) ?? 0;
                 const prevTd = prevRow.querySelector(
                   `td:nth-of-type(${index + 1}),th:nth-of-type(${index + 1})`
                 );
@@ -821,4 +817,18 @@ function asElement(node: Node | null | undefined): Element | undefined {
 
 function ensureElement(node: Node | null | undefined): Element | undefined {
   return asText(node)?.parentElement ?? asElement(node);
+}
+
+function indexOf<T>(iterable: Iterable<T> | undefined, t: T): number | undefined {
+  if (!iterable) {
+    return undefined;
+  }
+  let i = 0;
+  for (const e of iterable) {
+    if (e === t) {
+      return i;
+    }
+    ++i;
+  }
+  return undefined;
 }
