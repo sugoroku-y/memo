@@ -664,7 +664,7 @@ async function prepareEditor(root: HTMLDivElement) {
         (mutations.find(
           m =>
             m.type === 'childList' &&
-            m.removedNodes.values().find(e => e === target)
+            indexOf(m.removedNodes, target) !== undefined
         )?.target as Element);
       if (!parent) {
         break;
@@ -805,30 +805,4 @@ async function prepareEditor(root: HTMLDivElement) {
     attributeOldValue: true,
     characterDataOldValue: true,
   });
-}
-
-function asText(node: Node | null | undefined): Text | undefined {
-  return node?.nodeType === Node.TEXT_NODE ? (node as Text) : undefined;
-}
-
-function asElement(node: Node | null | undefined): Element | undefined {
-  return node?.nodeType === Node.ELEMENT_NODE ? (node as Element) : undefined;
-}
-
-function ensureElement(node: Node | null | undefined): Element | undefined {
-  return asText(node)?.parentElement ?? asElement(node);
-}
-
-function indexOf<T>(iterable: Iterable<T> | undefined, t: T): number | undefined {
-  if (!iterable) {
-    return undefined;
-  }
-  let i = 0;
-  for (const e of iterable) {
-    if (e === t) {
-      return i;
-    }
-    ++i;
-  }
-  return undefined;
 }
