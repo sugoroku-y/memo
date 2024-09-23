@@ -15,15 +15,17 @@ jobs:
             node-version: '20.x'
       - run: npm ci
       - run: npm run build
+      - run: |
+          mkdir data
+          cp index.html data/
+          cp -r js/ data/js
+          mkdir data/css
+          cp css/*.css data/css/
+          cp manifest.json data/
+          cp memo-pencil-svgrepo-com.svg data/
       - uses: actions/upload-pages-artifact@v1
         with:
-          path: |
-            index.html
-            js/
-            css/*
-            !css/*.scss
-            manifest.json
-            memo-pencil-svgrepo-com.svg
+          path: data/
   deploy:
     needs: build
     runs-on: ubuntu-latest 
