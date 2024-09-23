@@ -1,5 +1,9 @@
 {
   "private": true,
+  "scripts": {
+    "build": "tsc",
+    "prebuild": "dart-sass css/"
+  },
   "devDependencies": {
     "dart-sass": "^1.25.0",
     "typescript": "^5.6.2"
