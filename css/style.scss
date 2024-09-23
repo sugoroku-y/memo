@@ -1,4 +1,5 @@
 @import 'colors';
+@import 'password-dialog';
 
 $colors: $light;
 
@@ -27,8 +28,12 @@ th {
 }
 
 td {
-  border-right: solid 1px map-get($colors, 'emphasis');
-  border-bottom: solid 1px map-get($colors, 'emphasis');
+  border-right: solid 1px;
+  border-bottom: solid 1px;
+}
+td {
+  border-right-color: map-get($colors, 'emphasis');
+  border-bottom-color: map-get($colors, 'emphasis');
 }
 
 pre {
@@ -77,8 +82,8 @@ strike::after {
   }
 
   td {
-    border-right: solid 1px map-get($colors, 'emphasis');
-    border-bottom: solid 1px map-get($colors, 'emphasis');
+    border-right-color: map-get($colors, 'emphasis');
+    border-bottom-color: map-get($colors, 'emphasis');
   }
 }
 
@@ -119,12 +124,3 @@ ul>li {
   padding: 1px;
 }
 
-#passwordPromptDialog {
-  border: none;
-  border-radius: 16px;
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-}
