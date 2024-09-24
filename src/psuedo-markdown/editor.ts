@@ -1,3 +1,10 @@
+function* safeChildren(parent: Element | null) {
+  if (!parent) {
+    return;
+  }
+  yield* safeSiblings(parent.firstChild);
+}
+
 function* safeSiblings(first: Node | null, last?: Node) {
   for (
     let sibling = first, next: Node | null;
@@ -21,63 +28,47 @@ function prepareSurroundStyledText() {
     endOffset,
     commonAncestorContainer,
   } = sel.getRangeAt(0);
-  const [startElement, startNode] = (() => {
-    if (startContainer === commonAncestorContainer || startOffset > 0) {
-      return [startContainer.parentElement, startContainer];
+  const elementAndNode = (
+    target: Node,
+    offsetInRange: boolean,
+    next: (node: Node) => Node | null,
+    containerChild?: Node
+  ): [Element, Node?] => {
+    if (offsetInRange) {
+      return [target.parentElement!, target];
     }
     for (
-      let element = startContainer.parentElement;
+      let element = target.parentElement;
       element && element !== commonAncestorContainer;
       element = element.parentElement
     ) {
-      for (
-        let sibling = element.previousSibling;
-        sibling;
-        sibling = sibling.previousSibling
-      ) {
+      for (let sibling = next(element); sibling; sibling = next(sibling)) {
         if (
           asText(sibling)?.data.match(/\S/) ||
           sibling.nodeType === Node.ELEMENT_NODE
         ) {
-          return [element.parentElement, element];
+          return [element.parentElement!, element];
         }
       }
     }
-    return [
-      commonAncestorContainer as Element,
-      commonAncestorContainer.firstChild,
-    ];
-  })();
-  const [endElement, endNode] = (() => {
-    if (
-      endContainer === commonAncestorContainer ||
-      endOffset < (endContainer as Text).data.length
-    ) {
-      return [endContainer.parentElement, endContainer];
-    }
-    for (
-      let element = endContainer.parentElement;
-      element && element !== commonAncestorContainer;
-      element = element.parentElement
-    ) {
-      for (
-        let sibling = element.nextSibling;
-        sibling;
-        sibling = sibling.nextSibling
-      ) {
-        switch (sibling.nodeType) {
-          case Node.TEXT_NODE:
-            if (/\S/.test((sibling as Text).data)) {
-              return [element.parentElement, element];
-            }
-            break;
-          case Node.ELEMENT_NODE:
-            return [element.parentElement, element];
-        }
-      }
-    }
-    return [commonAncestorContainer as Element, undefined];
-  })();
+    return [commonAncestorContainer as Element, containerChild];
+  };
+  const startInText =
+    startContainer === commonAncestorContainer || startOffset > 0;
+  const endInText =
+    endContainer === commonAncestorContainer ||
+    endOffset < (endContainer as Text).data?.length;
+  const [startElement, startNode] = elementAndNode(
+    startContainer,
+    startInText,
+    node => node.previousSibling,
+    commonAncestorContainer.firstChild!
+  );
+  const [endElement, endNode] = elementAndNode(
+    endContainer,
+    endInText,
+    node => node.nextSibling
+  );
   if (startElement !== endElement) {
     // まとめて1つの要素に移動できない親子関係の場合は無効
     return;
@@ -86,12 +77,10 @@ function prepareSurroundStyledText() {
     container: startElement,
     startNode,
     startOffset,
-    startInText: startContainer === commonAncestorContainer || startOffset > 0,
+    startInText,
     endNode,
     endOffset,
-    endInText:
-      endContainer === commonAncestorContainer ||
-      endOffset < (endNode as Text).data?.length,
+    endInText,
   };
 }
 
@@ -100,7 +89,6 @@ function surroundStyledText(
   styledLocalName: string
 ) {
   let {
-    container,
     startNode,
     startOffset,
     startInText,
@@ -122,12 +110,12 @@ function surroundStyledText(
     endText.splitText(endOffset);
   }
   const styled = document.createElement(styledLocalName);
-  container?.insertBefore(styled, endNode?.nextSibling ?? null);
+  (asElement(endNode) ?? asText(endNode))?.after(styled);
   for (const child of safeSiblings(
     startNode!,
     endNode?.nextSibling ?? undefined
   )) {
-    styled.appendChild(child);
+    styled.append(child);
   }
   getSelection()?.setBaseAndExtent(
     styled.firstChild!,
@@ -164,17 +152,21 @@ const keymap: Record<
       // リストの項目の親がul/olでなければ無効
       return;
     }
-    const ul = ['ul', 'ol'].includes(prev?.localName ?? '')
-      ? (prev as Element)
-      : document.createElement(parent!.localName);
-    ul.appendChild(li);
-    if (ul !== prev) {
-      parent!.insertBefore(ul, next);
+    let ul;
+    if (['ul', 'ol'].includes(prev?.localName ?? '')) {
+      // 項目の前がリストならそのリストに追加
+      ul = prev!;
+      ul.append(li);
+    } else {
+      // でなければ項目があった場所に新しいリストを追加して移動
+      ul = document.createElement(parent!.localName);
+      li.after(ul);
+      ul.append(li);
     }
     if (next?.localName === ul.localName) {
-      for (let child = next.firstChild, n; child; child = n) {
-        n = child.nextSibling;
-        ul.appendChild(child);
+      // 項目の次が同じ種類のリストならそのリストの項目を移動して削除
+      for (const child of safeChildren(next)) {
+        ul.append(child);
       }
       next.remove();
     }
@@ -203,14 +195,14 @@ const keymap: Record<
     }
     if (parent.firstElementChild === li) {
       // 現在の項目が親の先頭であれば親の前に移動
-      grandParent.insertBefore(li, parent);
+      parent.before(li);
       if (!parent.firstElementChild) {
         // 親が空っぽになったら削除
         parent.remove();
       }
     } else if (parent.lastElementChild === li) {
       // 現在の項目が親の末尾であれば親の後ろに移動
-      grandParent.insertBefore(li, parent.nextSibling);
+      parent.after(li);
       if (!parent.firstElementChild) {
         // 親が空っぽになったら削除
         parent.remove();
@@ -219,12 +211,12 @@ const keymap: Record<
       // 親の複製に自分の後ろの兄弟を移動
       const nextUl = document.createElement(parent.localName);
       for (const sibling of safeSiblings(li.nextSibling)) {
-        nextUl.appendChild(sibling);
+        nextUl.append(sibling);
       }
       // 項目を親の次に移動
-      grandParent.insertBefore(li, parent.nextSibling);
+      parent.after(li);
       // その次に親の複製を追加
-      grandParent.insertBefore(nextUl, li.nextSibling);
+      li.after(nextUl);
     }
     // キャレットのあった位置を復元
     sel.setPosition(focusNode, focusOffset);
@@ -249,12 +241,12 @@ const keymap: Record<
     switch (next?.localName) {
       case 'li':
         // 項目の次も項目ならその後ろに移動
-        parent.insertBefore(li, next.nextSibling);
+        next.after(li);
         break;
       case 'ul':
       case 'ol':
         // 項目の次がリストならその先頭に移動
-        next.insertBefore(li, next.firstChild);
+        next.prepend(li);
         break;
       case undefined:
         if (
@@ -262,7 +254,7 @@ const keymap: Record<
           ['ul', 'ol'].includes(parent.parentElement.localName)
         ) {
           // 項目が一番最後で親の親がリストなら親の後ろに移動
-          parent.parentElement.insertBefore(li, parent.nextSibling);
+          parent.after(li);
           if (!parent.firstElementChild) {
             // 親が空っぽになったら削除
             parent.remove();
@@ -292,12 +284,12 @@ const keymap: Record<
     switch (prev?.localName) {
       case 'li':
         // 項目の前も項目ならその前に移動
-        parent.insertBefore(li, prev);
+        prev.before(li);
         break;
       case 'ul':
       case 'ol':
         // 項目の前がリストならその末尾に移動
-        prev.appendChild(li);
+        prev.append(li);
         break;
       case undefined:
         if (
@@ -305,7 +297,7 @@ const keymap: Record<
           ['ul', 'ol'].includes(parent.parentElement.localName)
         ) {
           // 項目が一番先頭で親の親がリストなら親の前に移動
-          parent.parentElement.insertBefore(li, parent);
+          parent.before(li);
           if (!parent.firstElementChild) {
             // 親が空っぽになったら削除
             parent.remove();
@@ -334,14 +326,14 @@ const keymap: Record<
         );
         getSelection()!.setPosition(nextTd?.firstChild ?? null, 0);
       } else {
-        const newTr = tr.parentElement!.appendChild(
-          document.createElement('tr')
-        );
+        const newTr = document.createElement('tr');
+        tr.parentElement!.append(newTr);
         const cellCount = cells.length;
         let focusCell;
         for (let i = 0; i < cellCount; ++i) {
-          const newTd = newTr.appendChild(document.createElement('td'));
-          newTd.appendChild(document.createElement('br'));
+          const newTd = document.createElement('td');
+          newTr.append(newTd);
+          newTd.append(document.createElement('br'));
           if (i === index) {
             focusCell = newTd;
           }
@@ -386,8 +378,9 @@ const keymap: Record<
         for (const row of table?.querySelectorAll('tr') ?? []) {
           const localName = row.querySelector('td,th')!.localName;
           while (index >= row.querySelectorAll(`tr > th, tr > td`).length) {
-            const cell = row.appendChild(document.createElement(localName));
-            cell.appendChild(document.createElement('br'));
+            const cell = document.createElement(localName);
+            row.append(cell);
+            cell.append(document.createElement('br'));
           }
         }
         nextCell = td.nextElementSibling;
@@ -411,49 +404,14 @@ const keymap: Record<
   },
   // テーブルのセル削除
   Delete(root, ev) {
-    this.Backspace(root, ev);
+    if (deleteStyledElement(false) || deleteTableCell(root, false)) {
+      ev.preventDefault();
+    };
   },
   Backspace(root, ev) {
-    const focusNode = getSelection()!.focusNode;
-    const focusElement = ensureElement(focusNode);
-    const td = focusElement?.closest('td,th');
-    if (
-      td &&
-      asElement(td.firstChild)?.localName === 'br' &&
-      td.firstChild!.nextSibling == null
-    ) {
-      // 空のセル上にキャレットがあればセルを削除
+    if (deleteStyledElement(true) || deleteTableCell(root, true)) {
       ev.preventDefault();
-      const tr = td.closest('tr');
-      const table = tr?.closest('table');
-      const forwardFocusNode =
-        td.nextElementSibling?.firstChild ??
-        tr?.nextElementSibling?.querySelector('td:first-child,th:first-child')
-          ?.firstChild ??
-        table?.nextElementSibling?.firstChild;
-      const backwardFocusNode =
-        td.previousElementSibling?.lastChild ??
-        tr?.previousElementSibling?.querySelector('td:last-child,th:last-child')
-          ?.lastChild ??
-        table?.previousElementSibling?.lastChild;
-      const focusNode =
-        ev.key === 'Delete'
-          ? forwardFocusNode ?? backwardFocusNode ?? root
-          : // Backspaceの場合は削除後のキャレット位置が逆
-            backwardFocusNode ?? forwardFocusNode ?? root;
-      const focusOffset =
-        focusNode === backwardFocusNode
-          ? (focusNode as Text).data?.length ?? 0
-          : 0;
-      td.remove();
-      if (tr && !tr.firstChild) {
-        tr.remove();
-        if (table && !table.querySelector('tr')) {
-          table.remove();
-        }
-      }
-      getSelection()!.setPosition(focusNode, focusOffset);
-    }
+    };
   },
   // Undo
   ['ctrl+z'](_, ev) {
@@ -486,11 +444,11 @@ const keymap: Record<
       if (em) {
         // emの子をstrongに移動する
         const strong = document.createElement('strong');
-        for (const child of safeSiblings(em.firstChild)) {
-          strong.appendChild(child);
+        for (const child of safeChildren(em)) {
+          strong.append(child);
         }
         // emをstrongに置き換え
-        em.parentElement?.replaceChild(strong, em);
+        em.replaceWith(strong);
         // strongの先頭から末尾までを選択
         getSelection()!.setBaseAndExtent(
           strong.firstChild!,
@@ -537,6 +495,97 @@ const keymap: Record<
     surroundStyledText(selection, 'code');
   },
 };
+
+function deleteStyledElement(goBackword: boolean) {
+  const sibling = goBackword ? 'previousSibling' : 'nextSibling';
+  const {isCollapsed, focusNode, focusOffset} = getSelection()!;
+  if (!isCollapsed) {
+    return false;
+  }
+  const focusText = asText(focusNode);
+  if (!focusText) {
+    return false;
+  }
+  const edgeIndex = goBackword ? 0 : focusText.data.length;
+  if (focusOffset !== edgeIndex) {
+    return false;
+  }
+  const target = ['em', 'strong', 'strike', 'code'].includes(
+    asElement(focusNode?.[sibling])?.localName ?? ''
+  )
+    ? (focusNode![sibling] as Element)
+    : !focusNode?.[sibling] &&
+      ['em', 'strong', 'strike', 'code'].includes(
+        focusNode?.parentElement?.localName ?? ''
+      )
+    ? focusNode!.parentElement!
+    : undefined;
+  if (!target) {
+    return false;
+  }
+  let parent: Element | undefined;
+  if (target.localName === 'strong') {
+    const em = document.createElement('em');
+    for (const child of safeChildren(target)) {
+      em.append(child);
+    }
+    target.replaceWith(em);
+  } else {
+    parent = target.parentElement!;
+    for (const child of safeChildren(target)) {
+      target.before(child);
+    }
+    target.remove();
+  }
+
+  getSelection()?.setPosition(focusNode, focusOffset);
+  parent?.normalize();
+  return true;
+}
+
+function deleteTableCell(root: HTMLDivElement, goBackword: boolean) {
+  const focusElement = ensureElement(getSelection()!.focusNode);
+  const td = focusElement?.closest('td,th');
+  if (!td) {
+    return false;
+  }
+  const br = asElement(td.firstChild);
+  if (br?.localName !== 'br'){
+    return false;
+  }
+  if (br.nextSibling) {
+    return false;
+  }
+  const tr = td.closest('tr');
+  const table = tr?.closest('table');
+  const forwardFocusNode = td.nextElementSibling?.firstChild ??
+    tr?.nextElementSibling?.querySelector('td:first-child,th:first-child')
+      ?.firstChild ??
+    table?.nextElementSibling?.firstChild;
+  const backwardFocusNode = td.previousElementSibling?.lastChild ??
+    tr?.previousElementSibling?.querySelector('td:last-child,th:last-child')
+      ?.lastChild ??
+    table?.previousElementSibling?.lastChild;
+  const focusNode = goBackword
+    ?
+    // Backspaceの場合は削除後のキャレット位置が逆
+    backwardFocusNode ?? forwardFocusNode ?? root
+    :
+    forwardFocusNode ?? backwardFocusNode ?? root;
+    const focusOffset = focusNode === backwardFocusNode
+    ? (focusNode as Text).data?.length ?? 0
+    : 0;
+  td.remove();
+  if (tr && !tr.firstChild) {
+    tr.remove();
+    if (table && !table.querySelector('tr')) {
+      table.remove();
+    }
+  }
+  getSelection()!.setPosition(focusNode, focusOffset);
+  return true;
+}
+
 async function prepareEditor(root: HTMLDivElement) {
   document.addEventListener(
     'keydown',
@@ -562,9 +611,10 @@ async function prepareEditor(root: HTMLDivElement) {
   new MutationObserver(mutations => {
     if (!root.firstChild) {
       // contentBoxが空になったら<div><br></div>を挿入
-      root
-        .appendChild(document.createElement('div'))
-        .appendChild(document.createElement('br'));
+      const div = document.createElement('div');
+      const br = document.createElement('br');
+      root.append(div);
+      div.append(br);
       // 挿入したdivにキャレットを移す
       getSelection()!.setPosition(root.firstChild, 0);
       return;
@@ -586,30 +636,36 @@ async function prepareEditor(root: HTMLDivElement) {
         type === 'childList' ? [...addedNodes] : []
       )
     )) {
-      switch (asElement(node)?.localName) {
+      const element = asElement(node);
+      if (!element) {
+        continue;
+      }
+      switch (element.localName) {
         case 'li':
-          if (node.firstChild === node.lastChild) {
-            const child = asElement(node.firstChild);
+          if (element.firstChild === element.lastChild) {
+            const child = asElement(element.firstChild);
             const grandChild = asElement(child?.firstChild);
             if (
               child?.firstChild === child?.lastChild &&
               grandChild?.localName === 'br'
             ) {
               // 要素1つだけを子に持っていて、その子がbrだけを子に持つ場合はbrだけを残す
-              node.replaceChild(grandChild, child!);
+              child!.replaceWith(grandChild);
             }
           }
           break;
         case 'a':
-          // aタグはhref以外の属性を除去
-          for (const {localName} of (node as Element).attributes) {
-            if (localName === 'href') {
-              continue;
+          {
+            // aタグはhref以外の属性を除去
+            for (const {localName} of element.attributes) {
+              if (localName === 'href') {
+                continue;
+              }
+              element.removeAttribute(localName);
             }
-            (node as Element).removeAttribute(localName);
+            // styleはattributesに並ばないので特別扱い
+            element.removeAttribute('style');
           }
-          // styleはattributesに並ばないので特別扱い
-          (node as Element).removeAttribute('style');
           break;
         case 'h1':
         case 'h2':
@@ -617,33 +673,30 @@ async function prepareEditor(root: HTMLDivElement) {
         case 'h4':
         case 'h5':
         case 'pre':
-          if (
-            node.firstChild === node.lastChild &&
-            node.firstChild?.nodeType === Node.ELEMENT_NODE &&
-            (node.firstChild as Element).localName === 'br'
-          ) {
-            // h*、preがbr要素1つだけを子に持つ場合はdivに差し替え
-            const div = document.createElement('div');
-            div.appendChild(document.createElement('br'));
-            node.parentElement!.replaceChild(div, node);
-            getSelection()!.setPosition(div, 0);
+          if (element.firstChild === element.lastChild) {
+            const child = asElement(element.firstChild);
+            if (child?.localName === 'br') {
+              // h*、preがbr要素1つだけを子に持つ場合はdivに差し替え
+              const div = document.createElement('div');
+              div.append(document.createElement('br'));
+              element.replaceWith(div);
+              getSelection()!.setPosition(div, 0);
+            }
           }
           break;
         case 'span':
-          {
-            // spanは使わないのでその子を親に移動して削除
-            const {nextSibling: pos, parentElement: div, firstChild} = node;
-            for (const child of safeSiblings(firstChild)) {
-              div?.insertBefore(child, pos);
-            }
-            (node as Element).remove();
+          // spanは使わないのでその子をspanの次に移動してspanは削除
+          for (const child of safeChildren(element)) {
+            element.after(child);
           }
+          element.remove();
           break;
         case 'br':
-          if (node.parentElement === root) {
+          if (element.parentElement === root) {
+            // ルート直下にあるbrはdivタグの中に入れる
             const div = document.createElement('div');
-            root.replaceChild(div, node);
-            div.appendChild(node);
+            element.replaceWith(div);
+            div.append(element);
             getSelection()!.setPosition(div, 0);
           }
           break;
@@ -666,8 +719,8 @@ async function prepareEditor(root: HTMLDivElement) {
       }
       if (parent === root) {
         const div = document.createElement('div');
-        root.replaceChild(div, target);
-        div.appendChild(target);
+        target.replaceWith(div);
+        div.append(target);
         parent = div;
       }
       if (['div', 'li'].includes(parent.localName)) {
@@ -683,26 +736,26 @@ async function prepareEditor(root: HTMLDivElement) {
           header2.textContent = 'Header2';
           data1.textContent = 'Data1';
           data2.textContent = 'Data2';
-          table.appendChild(headerLine);
-          headerLine.appendChild(header1);
-          headerLine.appendChild(header2);
-          table.appendChild(dataLine);
-          dataLine.appendChild(data1);
-          dataLine.appendChild(data2);
-          parent.parentElement!.replaceChild(table, parent);
+          table.append(headerLine);
+          headerLine.append(header1);
+          headerLine.append(header2);
+          table.append(dataLine);
+          dataLine.append(data1);
+          dataLine.append(data2);
+          parent.replaceWith(table);
           getSelection()!.setPosition(header1, 0);
           break;
         }
         if (target.data === '```') {
           const pre = document.createElement('pre');
           pre.textContent = '\n';
-          parent.parentElement?.replaceChild(pre, parent);
+          parent.replaceWith(pre);
           break;
         }
         if (target.data === '---') {
           const hr = document.createElement('hr');
           target.data = '';
-          parent.parentElement?.insertBefore(hr, parent);
+          parent.before(hr);
           break;
         }
         let match = /^(?:-|1\.)[ \xa0]/s.exec(target.data);
@@ -714,19 +767,19 @@ async function prepareEditor(root: HTMLDivElement) {
             target.data.charAt(0) === '-' ? 'ul' : 'ol'
           );
           const li = document.createElement('li');
-          ul.appendChild(li);
+          ul.append(li);
           if (!data && !target.nextSibling) {
             const br = document.createElement('br');
-            li.appendChild(br);
+            li.append(br);
           } else {
             target.data = data;
             const {nextSibling} = target;
-            li.appendChild(target);
+            li.append(target);
             for (const sibling of safeSiblings(nextSibling)) {
-              li.appendChild(sibling);
+              li.append(sibling);
             }
           }
-          parent.parentElement?.replaceChild(ul, parent);
+          parent.replaceWith(ul);
           if (focusNode === target) {
             getSelection()?.setPosition(
               li.firstChild,
@@ -741,16 +794,16 @@ async function prepareEditor(root: HTMLDivElement) {
           parent.parentElement?.localName === 'ul'
         ) {
           const sel = getSelection()!;
-          const {focusNode, focusOffset} = sel;
+          let {focusNode, focusOffset} = sel;
           const checkbox = document.createElement('input');
           checkbox.type = 'checkbox';
           if (target.data.charAt(1) === 'x') {
             checkbox.setAttribute('checked', 'true');
           }
-          target.data = target.data.slice(4);
-          target.parentElement?.insertBefore(checkbox, target);
+          const text = target.splitText(4);
+          target.replaceWith(checkbox);
           if (focusNode === target) {
-            sel.setPosition(focusNode, focusOffset - 4);
+            sel.setPosition(text, Math.max(focusOffset - 4, 0));
           }
           break;
         }
@@ -775,10 +828,10 @@ async function prepareEditor(root: HTMLDivElement) {
           continue;
         }
         const head = document.createElement(actual ? `h${actual}` : 'div');
-        for (const child of safeSiblings(div.firstChild)) {
-          head.appendChild(child);
+        for (const child of safeChildren(div)) {
+          head.append(child);
         }
-        div.parentElement!.replaceChild(head, div);
+        div.replaceWith(head);
         modified = true;
       }
       if (modified) {
