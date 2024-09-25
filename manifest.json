@@ -1,12 +1,18 @@
 {
+  "$schema": "https://json.schemastore.org/web-manifest-combined.json",
   "short_name": "Memo",
   "name": "メモ書き",
   "display": "standalone",
-  "start_url": "index.html",
+  "start_url": "./",
+  "shortcuts": [{
+    "name": "新規メモ",
+    "short_name": "New",
+    "url": "./"
+  }],
   "icons": [
       {
           "src": "memo-pencil-svgrepo-com.svg",
-          "sizes": "192x192"
+          "sizes": "192x192 72x72 96x96 128x128 256x256 48x48"
       }
   ]
 }
