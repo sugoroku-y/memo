@@ -9,3 +9,9 @@ function asElement(node: Node | null | undefined): Element | undefined {
 function ensureElement(node: Node | null | undefined): Element | undefined {
   return asText(node)?.parentElement ?? asElement(node);
 }
+
+function* ancestors(node: Node | null | undefined) {
+  for (; node; node = node.parentNode) {
+    yield node;
+  }
+}
