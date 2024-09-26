@@ -1,117 +1,3 @@
-function prepareSurroundStyledText() {
-  const sel = getSelection();
-  if (!sel || sel.isCollapsed || sel.rangeCount !== 1) {
-    // 選択していない、もしくは複数選択していれば無効
-    return;
-  }
-  let {
-    startContainer,
-    startOffset,
-    endContainer,
-    endOffset,
-    commonAncestorContainer,
-  } = sel.getRangeAt(0);
-  const elementAndNode = (
-    target: Node,
-    offsetInRange: boolean,
-    sibling: 'nextSibling' | 'previousSibling',
-    containerChild: Node | null | undefined
-  ): [Element, Node | null | undefined] => {
-    if (offsetInRange && target.parentElement) {
-      return [target.parentElement, target];
-    }
-    for (
-      let element = target.parentElement;
-      element && element.parentElement && element !== commonAncestorContainer;
-      element = element.parentElement
-    ) {
-      for (
-        let siblingNode = element[sibling];
-        siblingNode;
-        siblingNode = siblingNode[sibling]
-      ) {
-        if (asText(siblingNode)?.data.match(/\S/) || asElement(siblingNode)) {
-          return [element.parentElement, element];
-        }
-      }
-    }
-    return [commonAncestorContainer as Element, containerChild];
-  };
-  const startInText =
-    startContainer === commonAncestorContainer || startOffset > 0;
-  const endInText =
-    endContainer === commonAncestorContainer ||
-    endOffset < (endContainer as Text).data?.length;
-  const [startElement, startNode] = elementAndNode(
-    startContainer,
-    startInText,
-    'previousSibling',
-    commonAncestorContainer.firstChild
-  );
-  const [endElement, endNode] = elementAndNode(
-    endContainer,
-    endInText,
-    'nextSibling',
-    undefined
-  );
-  if (startElement !== endElement) {
-    // まとめて1つの要素に移動できない親子関係の場合は無効
-    return;
-  }
-  return {
-    container: startElement,
-    startNode,
-    startOffset,
-    startInText,
-    endNode,
-    endOffset,
-    endInText,
-  };
-}
-
-function surroundStyledText(
-  selection: NonNullable<ReturnType<typeof prepareSurroundStyledText>>,
-  styledLocalName: string
-) {
-  const sel = getSelection();
-  if (!sel) {
-    return;
-  }
-  let {startNode, startOffset, startInText, endNode, endOffset, endInText} =
-    selection;
-  const startText = asText(startNode);
-  if (startText && startInText) {
-    const same = startNode === endNode;
-    startNode = startText.splitText(startOffset);
-    if (same) {
-      endNode = startNode;
-      endOffset -= startOffset;
-    }
-  }
-  const endText = asText(endNode);
-  if (endText && endInText) {
-    endText.splitText(endOffset);
-  }
-  const styled = document.createElement(styledLocalName);
-  const styledPos = asElement(startNode) ?? asText(startNode);
-  if (!styledPos) {
-    return;
-  }
-  styledPos.before(styled);
-  for (const child of safeSiblings(
-    startNode,
-    endNode?.nextSibling ?? undefined
-  )) {
-    styled.append(child);
-  }
-  sel.setBaseAndExtent(
-    styled.firstChild ?? styled,
-    0,
-    styled.lastChild ?? styled,
-    (styled.lastChild as Text).data?.length ?? styled.childNodes.length - 1
-  );
-}
-
 const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
   // リストのレベルを深くする
   ['ctrl+]']() {
@@ -463,72 +349,139 @@ const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
   },
   // 強調/強い強調
   ['*']() {
-    const sel = getSelection();
-    if (!sel) {
+    if (!checkSurroundStyledText('strong')) {
       return false;
     }
-    const selection = prepareSurroundStyledText();
-    if (!selection) {
-      // まとめて1つの要素に移動できない親子関係の場合は無効
-      return false;
-    }
-    if (selection.container?.closest('strong')) {
-      // すでに強い強調が設定されていたら無効
-      return false;
-    }
-    // 標準のキー入力処理はキャンセル
-    {
-      // *は1文字で強調(em)、2文字で強い強調(strong)になるため、すでに強調が設定されている場合は強い強調に置き換える
-      const em = selection.container?.closest('em');
-      if (em) {
-        // emをstrongに差し替える
-        const strong = replace(document.createElement('strong'), em);
-        // strongの先頭から末尾までを選択
-        sel.setBaseAndExtent(
-          strong.firstChild ?? strong,
-          0,
-          strong.lastChild ?? strong,
-          (strong.lastChild as Text).data?.length ??
-            strong.childNodes.length - 1
-        );
-        return true;
-      }
+    const sel = getSelection()!;
+    const em = ensureElement(sel.focusNode)?.closest('em');
+    if (em && em === ensureElement(sel.anchorNode)?.closest('em')) {
+      // 選択範囲の始点と終点が同じem内にあれば強い強調(strong)にさしかえ
+      const strong = replace(document.createElement('strong'), em);
+      // strongの先頭から末尾までを選択
+      sel.selectAllChildren(strong);
+      return true;
     }
     // 選択範囲をemに入れる
-    surroundStyledText(selection, 'em');
-    return true;
+    return surroundStyledText('em');
   },
   // 取り消し線
   ['~']() {
-    const selection = prepareSurroundStyledText();
-    if (!selection) {
-      // まとめて1つの要素に移動できない親子関係の場合は無効
-      return false;
-    }
-    if (selection.container?.closest('strike')) {
-      // すでに取り消し線が設定されていたら無効
+    if (!checkSurroundStyledText('strike')) {
       return false;
     }
     // 選択範囲をstrikeに入れる
-    surroundStyledText(selection, 'strike');
-    return true;
+    return surroundStyledText('strike');
   },
   // コード
   ['`']() {
-    const selection = prepareSurroundStyledText();
-    if (!selection) {
-      // まとめて1つの要素に移動できない親子関係の場合は無効
-      return false;
-    }
-    if (selection.container?.closest('code')) {
-      // すでにコードが設定されていたら無効
+    if (!checkSurroundStyledText('code')) {
       return false;
     }
     // 選択範囲をcodeに入れる
-    surroundStyledText(selection, 'code');
-    return true;
+    return surroundStyledText('code');
   },
 };
+
+function checkSurroundStyledText(styledLocalName: string) {
+    const sel = getSelection();
+    if (!sel || sel.isCollapsed) {
+      // 選択されていなければ無効
+      return false;
+    }
+    if (
+      ensureElement(sel.focusNode)?.closest(styledLocalName) ||
+      ensureElement(sel.anchorNode)?.closest(styledLocalName)
+    ) {
+      // すでにstyledLocalNameが設定されていたら無効
+      return false;
+    }
+    return true;
+}
+
+function surroundStyledText(styledLocalName: string) {
+  const sel = getSelection();
+  if (!sel || sel.isCollapsed || sel.rangeCount !== 1) {
+    // 選択していない、もしくは複数選択していれば無効
+    return false;
+  }
+  let {
+    startContainer,
+    startOffset,
+    endContainer,
+    endOffset,
+    commonAncestorContainer,
+  } = sel.getRangeAt(0);
+  const elementAndNode = (
+    target: Node,
+    offsetInRange: boolean,
+    sibling: 'nextSibling' | 'previousSibling',
+    containerChild: Node | null | undefined
+  ): [Element, Node | null | undefined] => {
+    if (offsetInRange && target.parentElement) {
+      return [target.parentElement, target];
+    }
+    for (
+      let element = target.parentElement;
+      element && element.parentElement && element !== commonAncestorContainer;
+      element = element.parentElement
+    ) {
+      for (
+        let siblingNode = element[sibling];
+        siblingNode;
+        siblingNode = siblingNode[sibling]
+      ) {
+        if (asText(siblingNode)?.data.match(/\S/) || asElement(siblingNode)) {
+          return [element.parentElement, element];
+        }
+      }
+    }
+    return [commonAncestorContainer as Element, containerChild];
+  };
+  const startInText =
+    startContainer === commonAncestorContainer || startOffset > 0;
+  const endInText =
+    endContainer === commonAncestorContainer ||
+    endOffset < (endContainer as Text).data?.length;
+  let [startElement, startNode] = elementAndNode(
+    startContainer,
+    startInText,
+    'previousSibling',
+    commonAncestorContainer.firstChild
+  );
+  let [endElement, endNode] = elementAndNode(
+    endContainer,
+    endInText,
+    'nextSibling',
+    undefined
+  );
+  if (startElement !== endElement) {
+//     // まとめて1つの要素に移動できない親子関係の場合は無効
+    return false;
+  }
+  const startText = asText(startNode);
+  if (startText && startInText) {
+    const same = startNode === endNode;
+    startNode = startText.splitText(startOffset);
+    if (same) {
+      endNode = startNode;
+      endOffset -= startOffset;
+    }
+  }
+  const endText = asText(endNode);
+  if (endText && endInText) {
+    endText.splitText(endOffset);
+  }
+  const styled = document.createElement(styledLocalName);
+  (asElement(startNode) ?? asText(startNode))!.before(styled);
+  for (const child of safeSiblings(
+    startNode,
+    endNode?.nextSibling ?? undefined
+  )) {
+    styled.append(child);
+  }
+  sel.selectAllChildren(styled);
+  return true
+}
 
 function deleteStyledElement(goBackword: boolean) {
   const sibling = goBackword ? 'previousSibling' : 'nextSibling';
