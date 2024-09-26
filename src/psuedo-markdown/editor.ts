@@ -1,21 +1,3 @@
-function* safeChildren(parent: Element | null) {
-  if (!parent) {
-    return;
-  }
-  yield* safeSiblings(parent.firstChild);
-}
-
-function* safeSiblings(first: Node | null | undefined, last?: Node) {
-  for (
-    let sibling = first, next: Node | null;
-    sibling && sibling !== last;
-    sibling = next
-  ) {
-    next = sibling.nextSibling;
-    yield sibling;
-  }
-}
-
 function prepareSurroundStyledText() {
   const sel = getSelection();
   if (!sel || sel.isCollapsed || sel.rangeCount !== 1) {
@@ -922,19 +904,4 @@ async function prepareEditor(root: HTMLDivElement) {
     attributeOldValue: true,
     characterDataOldValue: true,
   });
-}
-
-function replace(to: Element, withE: Element): Element {
-  for (const child of safeChildren(withE)) {
-    to.append(child);
-  }
-  withE.replaceWith(to);
-  return to;
-}
-
-function expand(element: Element) {
-  for (const child of safeChildren(element)) {
-    element.before(child);
-  }
-  element.remove();
 }
