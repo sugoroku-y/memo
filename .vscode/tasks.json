@@ -19,6 +19,7 @@
 				"css/",
 				"--watch"
 			],
+			"group": "build",
 			"label": "dart-sass: watch",
 			"problemMatcher": [
 				"$node-sass"
