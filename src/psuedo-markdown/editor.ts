@@ -785,6 +785,7 @@ async function prepareEditor(root: HTMLDivElement) {
       if (['div', 'li'].includes(parent.localName)) {
         if (target.data === '|||') {
           const table = document.createElement('table');
+          const tbody = document.createElement('tbody');
           const headerLine = document.createElement('tr');
           const header1 = document.createElement('th');
           const header2 = document.createElement('th');
@@ -795,12 +796,13 @@ async function prepareEditor(root: HTMLDivElement) {
           header2.textContent = 'Header2';
           data1.textContent = 'Data1';
           data2.textContent = 'Data2';
-          table.append(headerLine);
+          tbody.append(headerLine);
           headerLine.append(header1);
           headerLine.append(header2);
-          table.append(dataLine);
+          tbody.append(dataLine);
           dataLine.append(data1);
           dataLine.append(data2);
+          table.append(tbody);
           parent.replaceWith(table);
           sel.setPosition(header1, 0);
           break;
