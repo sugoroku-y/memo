@@ -9,8 +9,7 @@
       "request": "launch",
       "name": "Chrome",
       "file": "${workspaceFolder}/index.html",
-      "webRoot": "${workspaceFolder}",
-      "preLaunchTask": "tsc: watch"
+      "webRoot": "${workspaceFolder}"
     }
   ]
 }
