@@ -141,7 +141,7 @@ const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
       // 項目の前がリストならそのリストに追加
       ul = prev;
       ul.append(li);
-      if (next) {
+      if (next && ['ul', 'ol'].includes(next.localName)) {
         // 項目の次がリストならそのリストの項目を移動して削除
         for (const child of safeChildren(next)) {
           ul.append(child);
