@@ -40,24 +40,31 @@ pre {
   padding: 5px;
 }
 
-code::before,
-code::after {
+code {
+  &::before,
+  &::after {
   content: '`';
+  }
 }
 
-em::before,
-em::after {
+em {
+  &::before,
+  &::after {
   content: '*';
 }
-
-strong::before,
-strong::after {
+}
+strong {
+  &::before,
+  &::after {
   content: '**';
+  }
 }
 
-strike::before,
-strike::after {
+strike {
+  &::before,
+  &::after {
   content: '~~';
+  }
 }
 
 @media (prefers-color-scheme: dark) {
