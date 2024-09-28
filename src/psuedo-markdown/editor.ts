@@ -666,6 +666,7 @@ async function prepareEditor(root: HTMLDivElement) {
                     'span',
                     'i',
                     'font',
+                    'pre',
                   ].includes(ancestor.localName)
                 ) {
                   break BLOCK;
