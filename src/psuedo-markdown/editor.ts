@@ -745,13 +745,10 @@ async function prepareEditor(root: HTMLDivElement) {
       if (!target.isConnected) {
         continue;
       }
-      if (
-        target.previousSibling &&
-        asElement(target.previousSibling)?.localName !== 'br'
-      ) {
+      if (!isBeginningOfLine(target)) {
         continue;
       }
-      if (target.data === '|||' && !target.nextSibling) {
+      if (target.data === '|||' && isEndOfLine(target)) {
         const table = document.createElement('table');
         const tbody = document.createElement('tbody');
         const headerLine = document.createElement('tr');
@@ -775,13 +772,13 @@ async function prepareEditor(root: HTMLDivElement) {
         sel.setPosition(header1, 0);
         continue;
       }
-      if (target.data === '```' && !target.nextSibling) {
+      if (target.data === '```' && isEndOfLine(target)) {
         const pre = document.createElement('pre');
         pre.textContent = '\n';
         target.replaceWith(pre);
         continue;
       }
-      if (target.data === '---' && !target.nextSibling) {
+      if (target.data === '---' && isEndOfLine(target)) {
         const hr = document.createElement('hr');
         target.replaceWith(hr);
         continue;

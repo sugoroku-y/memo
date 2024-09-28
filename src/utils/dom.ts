@@ -48,3 +48,11 @@ function expand(element: Element) {
   }
   element.remove();
 }
+
+function isBeginningOfLine(node: Node): boolean {
+  return !node.previousSibling || asElement(node.previousSibling)?.localName === 'br';
+}
+
+function isEndOfLine(node: Node): boolean {
+  return !node.nextSibling || asElement(node.nextSibling)?.localName === 'br';
+}
