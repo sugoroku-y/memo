@@ -264,7 +264,8 @@ const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
       return false;
     }
     const focusText = asText(sel.focusNode);
-    const endOffset = focusText?.data.length ?? (sel.focusNode?.childNodes.length || 1) - 1;
+    const endOffset =
+      focusText?.data.length ?? (sel.focusNode?.childNodes.length || 1) - 1;
     // キャレットが末尾になければ何もしない
     if (sel.focusOffset !== endOffset) {
       return false;
@@ -383,19 +384,19 @@ const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
 };
 
 function checkSurroundStyledText(styledLocalName: string) {
-    const sel = getSelection();
-    if (!sel || sel.isCollapsed) {
-      // 選択されていなければ無効
-      return false;
-    }
-    if (
-      ensureElement(sel.focusNode)?.closest(styledLocalName) ||
-      ensureElement(sel.anchorNode)?.closest(styledLocalName)
-    ) {
-      // すでにstyledLocalNameが設定されていたら無効
-      return false;
-    }
-    return true;
+  const sel = getSelection();
+  if (!sel || sel.isCollapsed) {
+    // 選択されていなければ無効
+    return false;
+  }
+  if (
+    ensureElement(sel.focusNode)?.closest(styledLocalName) ||
+    ensureElement(sel.anchorNode)?.closest(styledLocalName)
+  ) {
+    // すでにstyledLocalNameが設定されていたら無効
+    return false;
+  }
+  return true;
 }
 
 function surroundStyledText(styledLocalName: string) {
@@ -455,7 +456,7 @@ function surroundStyledText(styledLocalName: string) {
     undefined
   );
   if (startElement !== endElement) {
-//     // まとめて1つの要素に移動できない親子関係の場合は無効
+    //     // まとめて1つの要素に移動できない親子関係の場合は無効
     return false;
   }
   const startText = asText(startNode);
@@ -480,7 +481,7 @@ function surroundStyledText(styledLocalName: string) {
     styled.append(child);
   }
   sel.selectAllChildren(styled);
-  return true
+  return true;
 }
 
 function deleteStyledElement(goBackword: boolean) {
@@ -578,7 +579,7 @@ function deleteTableCell(root: HTMLDivElement, goBackword: boolean) {
 async function prepareEditor(root: HTMLDivElement) {
   document.addEventListener(
     'keydown',
-    (ev) => {
+    ev => {
       const listener =
         keymap[
           `${ev.ctrlKey ? 'ctrl+' : ''}${ev.altKey ? 'alt+' : ''}${ev.key}`
@@ -589,7 +590,7 @@ async function prepareEditor(root: HTMLDivElement) {
     },
     true
   );
-  root.addEventListener('click', (ev) => {
+  root.addEventListener('click', ev => {
     const checkbox = asElement(ev.target as Node)?.closest(
       'input[type="checkbox"]'
     ) as HTMLInputElement;
@@ -602,7 +603,7 @@ async function prepareEditor(root: HTMLDivElement) {
       checkbox.removeAttribute('checked');
     }
   });
-  new MutationObserver((mutations) => {
+  new MutationObserver(mutations => {
     const sel = getSelection();
     if (!sel) {
       return;
@@ -657,9 +658,15 @@ async function prepareEditor(root: HTMLDivElement) {
                 if (
                   ancestor.previousSibling ||
                   ancestor.nextSibling ||
-                  !['em', 'strong', 'strike', 'code', 'span'].includes(
-                    ancestor.localName
-                  )
+                  ![
+                    'em',
+                    'strong',
+                    'strike',
+                    'code',
+                    'span',
+                    'i',
+                    'font',
+                  ].includes(ancestor.localName)
                 ) {
                   break BLOCK;
                 }
@@ -700,7 +707,9 @@ async function prepareEditor(root: HTMLDivElement) {
           }
           break;
         case 'span':
-          // spanは使わないので展開
+        case 'i':
+        case 'font':
+          // span,i,fontは使わないので展開
           expand(element);
           break;
         case 'br':
@@ -719,15 +728,9 @@ async function prepareEditor(root: HTMLDivElement) {
         continue;
       }
       const target = _target as Text;
-      let parent =
-        target.parentElement ??
-        (mutations.find(
-          (m) =>
-            m.type === 'childList' &&
-            indexOf(m.removedNodes, target) !== undefined
-        )?.target as Element);
+      let parent = target.parentElement;
       if (!parent) {
-        break;
+        continue;
       }
       if (parent === root) {
         const div = document.createElement('div');
@@ -735,88 +738,96 @@ async function prepareEditor(root: HTMLDivElement) {
         div.append(target);
         parent = div;
       }
-      if (['div', 'li'].includes(parent.localName)) {
-        if (target.data === '|||') {
-          const table = document.createElement('table');
-          const tbody = document.createElement('tbody');
-          const headerLine = document.createElement('tr');
-          const header1 = document.createElement('th');
-          const header2 = document.createElement('th');
-          const dataLine = document.createElement('tr');
-          const data1 = document.createElement('td');
-          const data2 = document.createElement('td');
-          header1.textContent = 'Header1';
-          header2.textContent = 'Header2';
-          data1.textContent = 'Data1';
-          data2.textContent = 'Data2';
-          tbody.append(headerLine);
-          headerLine.append(header1);
-          headerLine.append(header2);
-          tbody.append(dataLine);
-          dataLine.append(data1);
-          dataLine.append(data2);
-          table.append(tbody);
-          parent.replaceWith(table);
-          sel.setPosition(header1, 0);
-          break;
+      if (!['div', 'li'].includes(parent.localName)) {
+        continue;
+      }
+      if (!target.isConnected) {
+        continue;
+      }
+      if (
+        target.previousSibling &&
+        asElement(target.previousSibling)?.localName !== 'br'
+      ) {
+        continue;
+      }
+      if (target.data === '|||' && !target.nextSibling) {
+        const table = document.createElement('table');
+        const tbody = document.createElement('tbody');
+        const headerLine = document.createElement('tr');
+        const header1 = document.createElement('th');
+        const header2 = document.createElement('th');
+        const dataLine = document.createElement('tr');
+        const data1 = document.createElement('td');
+        const data2 = document.createElement('td');
+        header1.textContent = 'Header1';
+        header2.textContent = 'Header2';
+        data1.textContent = 'Data1';
+        data2.textContent = 'Data2';
+        tbody.append(headerLine);
+        headerLine.append(header1);
+        headerLine.append(header2);
+        tbody.append(dataLine);
+        dataLine.append(data1);
+        dataLine.append(data2);
+        table.append(tbody);
+        target.replaceWith(table);
+        sel.setPosition(header1, 0);
+        continue;
+      }
+      if (target.data === '```' && !target.nextSibling) {
+        const pre = document.createElement('pre');
+        pre.textContent = '\n';
+        target.replaceWith(pre);
+        continue;
+      }
+      if (target.data === '---' && !target.nextSibling) {
+        const hr = document.createElement('hr');
+        target.replaceWith(hr);
+        continue;
+      }
+      if (/^(?:-|1\.)[ \xa0]/s.test(target.data)) {
+        const isUnordered = target.data.charAt(0) === '-';
+        const prefixLength = isUnordered ? 2 : 3;
+        const ul = document.createElement(isUnordered ? 'ul' : 'ol');
+        const li = document.createElement('li');
+        ul.append(li);
+        const firstChild = target.splitText(prefixLength);
+        const nextSibling = firstChild.nextSibling;
+        if (firstChild.data) {
+          li.append(firstChild);
+        } else {
+          firstChild.remove();
         }
-        if (target.data === '```') {
-          const pre = document.createElement('pre');
-          pre.textContent = '\n';
-          parent.replaceWith(pre);
-          break;
+        for (const sibling of safeSiblings(nextSibling)) {
+          li.append(sibling);
         }
-        if (target.data === '---') {
-          const hr = document.createElement('hr');
-          target.data = '';
-          parent.before(hr);
-          break;
+        if (!li.firstChild) {
+          const br = document.createElement('br');
+          li.append(br);
         }
-        let match = /^(?:-|1\.)[ \xa0]/s.exec(target.data);
-        if (match && parent.firstChild === target) {
-          const [prefix] = match;
-          const data = target.data.slice(prefix.length);
-          const {focusNode, focusOffset = 0} = sel;
-          const ul = document.createElement(
-            target.data.charAt(0) === '-' ? 'ul' : 'ol'
-          );
-          const li = document.createElement('li');
-          ul.append(li);
-          if (!data && !target.nextSibling) {
-            const br = document.createElement('br');
-            li.append(br);
-          } else {
-            target.data = data;
-            const {nextSibling} = target;
-            li.append(target);
-            for (const sibling of safeSiblings(nextSibling)) {
-              li.append(sibling);
-            }
-          }
-          parent.replaceWith(ul);
-          if (focusNode === target) {
-            sel.setPosition(li.firstChild, focusOffset - prefix.length);
-          }
-          break;
+        parent.replaceWith(ul);
+        if (sel.focusNode === target) {
+          sel.setPosition(li.firstChild, sel.focusOffset - prefixLength);
         }
-        if (
-          /^\[[x ]\][ \xa0]/.test(target.data) &&
-          parent.localName === 'li' &&
-          parent.parentElement?.localName === 'ul'
-        ) {
-          let {focusNode, focusOffset} = sel;
-          const checkbox = document.createElement('input');
-          checkbox.type = 'checkbox';
-          if (target.data.charAt(1) === 'x') {
-            checkbox.setAttribute('checked', 'true');
-          }
-          const text = target.splitText(4);
-          target.replaceWith(checkbox);
-          if (focusNode === target) {
-            sel.setPosition(text, Math.max(focusOffset - 4, 0));
-          }
-          break;
+        continue;
+      }
+      if (
+        /^\[[x ]\][ \xa0]/.test(target.data) &&
+        parent.localName === 'li' &&
+        parent.parentElement?.localName === 'ul'
+      ) {
+        let {focusNode, focusOffset} = sel;
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        if (target.data.charAt(1) === 'x') {
+          checkbox.setAttribute('checked', 'true');
         }
+        const text = target.splitText(4);
+        target.replaceWith(checkbox);
+        if (focusNode === target) {
+          sel.setPosition(text, Math.max(focusOffset - 4, 0));
+        }
+        continue;
       }
     }
     {
