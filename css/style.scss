@@ -38,32 +38,33 @@ td {
 
 pre {
   padding: 5px;
+  margin: .5em auto;
 }
 
 code {
   &::before,
   &::after {
-  content: '`';
+    content: '`';
   }
 }
 
 em {
   &::before,
   &::after {
-  content: '*';
-}
+    content: '*';
+  }
 }
 strong {
   &::before,
   &::after {
-  content: '**';
+    content: '**';
   }
 }
 
 strike {
   &::before,
   &::after {
-  content: '~~';
+    content: '~~';
   }
 }
 
@@ -94,7 +95,11 @@ strike {
   }
 }
 
-h1, h2, h3, h4, h5 {
+h1,
+h2,
+h3,
+h4,
+h5 {
   font-weight: bold;
 }
 h1 {
@@ -116,7 +121,7 @@ h5 {
   font-size: 12px;
 }
 
-ul>li {
+ul > li {
   &::marker {
     content: '- ';
   }
@@ -130,4 +135,3 @@ ul>li {
   height: calc(100% - 2px);
   padding: 1px;
 }
-
