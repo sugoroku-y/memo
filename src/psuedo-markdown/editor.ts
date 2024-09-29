@@ -780,7 +780,11 @@ async function prepareEditor(root: HTMLDivElement) {
       }
       if (target.data === '---' && isEndOfLine(target)) {
         const hr = document.createElement('hr');
-        target.replaceWith(hr);
+        target.before(hr);
+        target.data = '';
+        if (sel.focusNode === target) {
+          sel.setPosition(target, 0);
+        }
         continue;
       }
       if (/^(?:-|1\.)[ \xa0]/s.test(target.data)) {
