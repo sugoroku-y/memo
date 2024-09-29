@@ -11,30 +11,54 @@ declare const passwordPromptDialog: HTMLDialogElement;
  * - パスワードが5文字以上入力されていればEnterキーでもダイアログは閉じる
  * @returns {Promise<string>} 入力されたパスワード
  */
-function passwordPrompt() {
-  return new Promise<string>(resolve => {
-    const input = passwordPromptDialog.querySelector('input')!;
-    const button = passwordPromptDialog.querySelector('button')!;
-    input.type = 'text';
-    input.value = Math.random().toString(36).slice(2);
-    input.select();
-    const validation = () => {
-      button.disabled = input.value.length < 5;
-    };
-    input.addEventListener('input', () => {
-      if (input.type !== 'password') {
-        input.type = 'password';
-      }
-      validation();
-    });
-    button.addEventListener('click', () => {
-      if (input.value.length < 5) {
-        return;
-      }
-      resolve(input.value);
-      passwordPromptDialog.close();
-    });
+async function passwordPrompt() {
+  // <dialog class="password-prompt">
+  //   <form method="dialog">
+  //     <label>パスワード: <input /></label>
+  //     <button>設定</button>
+  //   </form>
+  // </dialog>
+  const dialog = document.createElement('dialog');
+  dialog.classList.add('password-prompt');
+  const form = dialog.appendChild(document.createElement('form'));
+  form.method = 'dialog';
+  const label = form.appendChild(document.createElement('label'));
+  label.append('パスワード: ')
+  const input = label.appendChild(document.createElement('input'));
+  input.type = 'text';
+  input.value = Math.random().toString(36).slice(2);
+  const button = form.appendChild(document.createElement('button'));
+  button.append('設定')
+  document.body.append(dialog);
+
+  input.select();
+  const validation = () => {
+    button.disabled = input.value.length < 5;
+  };
+  input.addEventListener('input', () => {
+    if (input.type !== 'password') {
+      input.type = 'password';
+    }
     validation();
-    passwordPromptDialog.show();
   });
+  dialog.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Escape') {
+      ev.preventDefault();
+    }
+  })
+  validation();
+  dialog.showModal();
+  try {
+    return await new Promise<string>(resolve => {
+      dialog.addEventListener('submit', (ev) => {
+        if (input.value.length < 5) {
+          ev.preventDefault()
+          return;
+        }
+        resolve(input.value);
+      });
+    });
+  } finally {
+    dialog?.remove();
+  }
 }
