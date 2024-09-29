@@ -46,3 +46,16 @@ self.addEventListener('fetch', (event) => {
   })()
   );
 });
+
+self.addEventListener('message', (event) => {
+  switch (event.data.type) {
+    case 'cache-clear':
+      (async () => {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(async (key) => {
+          await caches.delete(key);
+        }));
+      })();
+      break;
+  }
+})
