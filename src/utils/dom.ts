@@ -50,9 +50,37 @@ function expand(element: Element) {
 }
 
 function isBeginningOfLine(node: Node): boolean {
-  return !node.previousSibling || asElement(node.previousSibling)?.localName === 'br';
+  if (!node.previousSibling) {
+    return true;
+  }
+  const element = asElement(node.previousSibling);
+  if (!element) {
+    return false;
+  }
+  if (element.localName === 'br') {
+    return true;
+  }
+  const style = window.getComputedStyle(element)
+  if (!style.display.startsWith('inline')) {
+    return true;
+  }
+  return false;
 }
 
 function isEndOfLine(node: Node): boolean {
-  return !node.nextSibling || asElement(node.nextSibling)?.localName === 'br';
+  if (!node.nextSibling) {
+    return true;
+  }
+  const element = asElement(node.nextSibling);
+  if (!element) {
+    return false;
+  }
+  if (element.localName === 'br') {
+    return true;
+  }
+  const style = window.getComputedStyle(element)
+  if (!style.display.startsWith('inline')) {
+    return true;
+  }
+  return false;
 }
