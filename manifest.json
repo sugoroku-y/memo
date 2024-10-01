@@ -6,10 +6,6 @@
   "start_url": "./",
   "shortcuts": [{
     "name": "新規メモ",
-    "icons": [{
-      "src": "memo-pencil-svgrepo-com.svg",
-      "sizes": "96x96"
-    }],
     "short_name": "New",
     "url": "./"
   }],
