@@ -1,0 +1,79 @@
+dialog.open-document {
+  width: 80%;
+  height: 80%;
+  > form {
+    display: flex;
+    flex-flow: column;
+    align-items: end;
+    div.list {
+      width: 100%;
+      height: 100%;
+      background-color: rgb(240, 240, 240);
+      div.list-item {
+        display: flex;
+        flex-flow: row;
+        justify-content: space-between;
+        position: relative;
+        background-color: rgb(240, 240, 224);
+        &:nth-child(even) {
+          background-color: rgb(224, 240, 240);
+        }
+        &:hover {
+          background-color: rgb(200, 240, 200);
+        }
+        &[data-selected] {
+          background-color: rgb(200, 200, 240);
+          font-weight: bold;
+        }
+        div.list-item-title {
+          width: 60%;
+          text-wrap: nowrap;
+          overflow-x: hidden;
+          text-overflow: ellipsis;
+        }
+        div.list-item-last-modified {
+          width: 14em;
+        }
+        button {
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          width: 2em;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 1s;
+          background-color: transparent;
+          border: none;
+          border-radius: 5px;
+          &:hover {
+            background-color: rgba(0, 0, 0, 0.3);
+          }
+          &:active {
+            background-color: rgba(0, 0, 0, 0.5);
+          }
+
+          @at-root #{selector-replace(&, 'div.list-item', 'div.list-item:hover')} {
+            pointer-events: auto;
+            opacity: 1;
+          }
+        }
+        button[name='another-tab'] {
+          right: calc(2em + 5px);
+        }
+        button[name='delete'] {
+          right: 0;
+        }
+      }
+    }
+    > div {
+      > button {
+        margin: 10px 5px;
+        width: 8em;
+      }
+      // button:not([type="button"]) {
+      // }
+      // button[name="cancel"] {
+      // }
+    }
+  }
+}

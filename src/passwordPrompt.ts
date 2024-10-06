@@ -12,53 +12,34 @@ declare const passwordPromptDialog: HTMLDialogElement;
  * @returns {Promise<string>} 入力されたパスワード
  */
 async function passwordPrompt() {
-  // <dialog class="password-prompt">
-  //   <form method="dialog">
-  //     <label>パスワード: <input /></label>
-  //     <button>設定</button>
-  //   </form>
-  // </dialog>
-  const dialog = document.createElement('dialog');
-  dialog.classList.add('password-prompt');
-  const form = dialog.appendChild(document.createElement('form'));
-  form.method = 'dialog';
-  const label = form.appendChild(document.createElement('label'));
-  label.append('パスワード: ')
-  const input = label.appendChild(document.createElement('input'));
-  input.type = 'text';
-  input.value = Math.random().toString(36).slice(2);
-  const button = form.appendChild(document.createElement('button'));
-  button.append('設定')
-  document.body.append(dialog);
-
-  input.select();
-  const validation = () => {
-    button.disabled = input.value.length < 5;
-  };
+  const dlg = dialog({classList: 'password-prompt'})/* html */ `
+    <label>パスワード: <input type="text"/></label>
+    <button>設定</button>
+  `;
+  const input = dlg.querySelector('input')!;
+  const button = dlg.querySelector('button')!;
   input.addEventListener('input', () => {
     if (input.type !== 'password') {
       input.type = 'password';
     }
-    validation();
+    button.disabled = input.value.length < 5;
   });
-  dialog.addEventListener('keydown', (ev) => {
+  dlg.addEventListener('keydown', ev => {
     if (ev.key === 'Escape') {
       ev.preventDefault();
     }
-  })
-  validation();
-  dialog.showModal();
-  try {
-    return await new Promise<string>(resolve => {
-      dialog.addEventListener('submit', (ev) => {
-        if (input.value.length < 5) {
-          ev.preventDefault()
-          return;
-        }
-        resolve(input.value);
-      });
+  });
+  dlg.addEventListener('submit', () => {
+    dlg.returnValue = input.value;
+  });
+  document.body.append(dlg);
+  input.value = Math.random().toString(36).slice(2);
+  input.select();
+  dlg.showModal();
+  return await new Promise<string>(resolve => {
+    dlg.addEventListener('close', () => {
+      resolve(dlg.returnValue);
+      dlg.remove();
     });
-  } finally {
-    dialog?.remove();
-  }
+  });
 }

@@ -12,14 +12,15 @@ function contents(root: HTMLDivElement) {
       } else {
         history.replaceState(data, '', url);
       }
+      if (documentId) {
+        saveDocument(documentId, encoded);
+      }
     })();
   }).observe(root, {
     characterData: true,
     childList: true,
     attributes: true,
     subtree: true,
-    attributeOldValue: true,
-    characterDataOldValue: true,
   });
 
   window.addEventListener('popstate', () => {

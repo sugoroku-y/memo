@@ -1,3 +1,5 @@
+let documentId: string | undefined;
+
 const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
   // リストのレベルを深くする
   ['ctrl+]']() {
@@ -329,6 +331,10 @@ const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
     // 先頭のセルの前には何も存在しないので移動しない
     return true;
   },
+  ['ctrl+o']() {
+    openDocumentDialog();
+    return true;
+  },
   // テーブルのセル削除
   Delete(root) {
     return deleteStyledElement(false) || deleteTableCell(root, false);
@@ -604,6 +610,28 @@ async function prepareEditor(root: HTMLDivElement) {
     }
   });
   new MutationObserver(mutations => {
+    // documentIdが未設定ならドキュメントから取得
+    documentId ??=
+      root
+        .querySelector('[data-document-id]')
+        ?.getAttribute('data-document-id') ??
+      // ドキュメントにもなければ乱数によって生成
+      [1, 2, 3].map(() => Math.random().toString(36).slice(2)).join('');
+    const firstElement = root.firstElementChild;
+    if (
+      firstElement &&
+      firstElement.getAttribute('data-document-id') !== documentId
+    ) {
+      // 最初の要素のdata-document-id属性がdocumentIdと一致しなければ再設定
+      firstElement.setAttribute('data-document-id', documentId);
+      for (const holder of root.querySelectorAll('[data-document-id]')) {
+        if (holder === firstElement) {
+          continue;
+        }
+        // firstElement以外でdata-document-id属性を持つものは属性を除去
+        holder.removeAttribute('data-document-id');
+      }
+    }
     const sel = getSelection();
     if (!sel) {
       return;
@@ -869,7 +897,149 @@ async function prepareEditor(root: HTMLDivElement) {
     childList: true,
     attributes: true,
     subtree: true,
-    attributeOldValue: true,
-    characterDataOldValue: true,
+  });
+
+  let inDragging = false;
+  root.addEventListener('dragstart', ev => {
+    inDragging = true;
+    if (ev.dataTransfer?.types.includes('text/html')) {
+      const source = document.createElement('div');
+      source.innerHTML = ev.dataTransfer.getData('text/html');
+      for (const e of source.querySelectorAll('[data-document-id]')) {
+        e.removeAttribute('data-document-id');
+      }
+      for (const e of source.querySelectorAll('h1,h2,h3,h4,h5')) {
+        const div = document.createElement('div');
+        div.append(...e.childNodes);
+        e.replaceWith(div);
+      }
+      ev.dataTransfer.setData('text/html', source.innerHTML);
+    }
+  });
+  root.addEventListener('dragend', ev => {
+    inDragging = false;
+  });
+  root.addEventListener(
+    'dragover',
+    ev => {
+      if (inDragging) {
+        return;
+      }
+      if (!ev.dataTransfer) {
+        return;
+      }
+      const {types} = ev.dataTransfer;
+      if (
+        types.includes('Files') ||
+        (!types.includes('text.html') && !types.includes('text/plain'))
+      ) {
+        ev.dataTransfer.effectAllowed = 'none';
+        ev.preventDefault();
+        return;
+      }
+    },
+    true
+  );
+  root.addEventListener('drop', ev => {
+    if (inDragging) {
+      return;
+    }
+    if (!ev.dataTransfer?.types.includes('text/html')) {
+      // html以外はデフォルト処理に回す
+      return;
+    }
+    const sel = getSelection();
+    if (!sel) {
+      // Selectionが存在しない(FireFoxでiframe内にキャレットがあるときなど)はデフォルト処理
+      return;
+    }
+    const source = document.createElement('div');
+    source.innerHTML = ev.dataTransfer.getData('text/html');
+    // 余計な属性・要素を除去
+    for (const e of source.querySelectorAll('*')) {
+      e.removeAttribute('data-document-id');
+      e.removeAttribute('style');
+      if (
+        ![
+          // サポート外の要素は除去
+          'em',
+          'strike',
+          'strong',
+          'code',
+          'pre',
+          'a',
+          'hr',
+          'br',
+          'table',
+          'tbody',
+          'tr',
+          'th',
+          'td',
+          'ul',
+          'ol',
+          'li',
+          'div',
+        ].includes(e.localName) ||
+        // https以外へのリンクは除去
+        (e.localName === 'a' &&
+          (!e.hasAttribute('href') ||
+            !e.getAttribute('href')?.startsWith('https://')))
+      ) {
+        for (const child of safeChildren(e)) {
+          e.before(child);
+        }
+        e.remove();
+        continue;
+      }
+      if (e.localName === 'a') {
+        // href以外の属性は除去
+        for (const a of e.attributes) {
+          if (a.name !== 'href') {
+            e.removeAttribute(a.name);
+          }
+        }
+        // スタイル指定は除去
+        e.removeAttribute('style');
+        // 別タブで開く
+        e.setAttribute('target', '_blank');
+        // リンク先に不要な情報を渡さない
+        e.setAttribute('rel', 'nofollow noopener noreferrer');
+        continue;
+      }
+    }
+    // ドロップ位置を取得
+    const {offset, offsetNode} = document.caretPositionFromPoint?.(
+      ev.x,
+      ev.y
+    ) ?? {
+      // caretPositionFromPoint未対応のブラウザではev.targetを使う(未確認)
+      offsetNode: ev.target === root ? root.firstChild : (ev.target as Node),
+      offset: 0,
+    };
+    const caretText = asText(offsetNode);
+    if (caretText) {
+      // ドロップ位置がテキスト内
+      const splitted = caretText.splitText(offset);
+      splitted.before(...source.childNodes);
+      sel.setBaseAndExtent(caretText, offset, splitted, 0);
+      ev.dataTransfer.dropEffect = 'copy';
+      ev.preventDefault();
+      return;
+    }
+    const caretElement = asElement(offsetNode);
+    if (!caretElement) {
+      // ドロップ位置が要素でもテキストでもない(ことは多分ないが)ときはデフォルト処理に回す
+      return;
+    }
+    const pos = caretElement.childNodes.item(offset);
+    const count = source.childNodes.length;
+    if (pos) {
+      pos.before(...source.childNodes);
+    } else {
+      caretElement.append(...source.childNodes);
+    }
+    sel.setBaseAndExtent(caretElement, offset, caretElement, offset + count);
+    ev.dataTransfer.dropEffect = 'copy';
+    ev.preventDefault();
   });
 }

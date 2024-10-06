@@ -2,7 +2,7 @@
   "private": true,
   "scripts": {
     "build": "tsc",
-    "prebuild": "dart-sass css/"
+    "prebuild": "dart-sass css/style.scss:css/style.css"
   },
   "devDependencies": {
     "dart-sass": "^1.25.0",

@@ -11,13 +11,11 @@ async function applyHash(root: HTMLDivElement) {
       sel.setPosition(node, offset);
     }
   } else {
-    while (root.firstChild) {
-      root.removeChild(root.firstChild);
-    }
-    root.appendChild(document.createElement('h1')).textContent = `# [${formatDate('YYYY-MM-DD hh:mm')}] memo`
-    const br = root
-      .appendChild(document.createElement('div'))
-      .appendChild(document.createElement('br'));
+    root.innerHTML = /* html */ `
+      <h1># [${formatDate('YYYY-MM-DD hh:mm')}] memo<h1>
+      <div><br/></div>
+    `.replace(/(?<=^|>)\s+(?=<|$)/g, '');
+    const br = root.querySelector('br')!;
     getSelection()?.setPosition(br.parentElement, 0);
   }
   root.focus();

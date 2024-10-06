@@ -60,7 +60,7 @@ function isBeginningOfLine(node: Node): boolean {
   if (element.localName === 'br') {
     return true;
   }
-  const style = window.getComputedStyle(element)
+  const style = window.getComputedStyle(element);
   if (!style.display.startsWith('inline')) {
     return true;
   }
@@ -78,9 +78,70 @@ function isEndOfLine(node: Node): boolean {
   if (element.localName === 'br') {
     return true;
   }
-  const style = window.getComputedStyle(element)
+  const style = window.getComputedStyle(element);
   if (!style.display.startsWith('inline')) {
     return true;
   }
   return false;
+}
+
+function dialog(
+  options?: ElementOptions
+): (template: TemplateStringsArray, ...values: unknown[]) => HTMLDialogElement {
+  return (...args) => {
+    const dialog = element(
+      'dialog',
+      options
+    )/* html */ `<form method="dialog"></form>`;
+    dialog.firstElementChild!.innerHTML = args[0].reduce(
+      (r, e, i) => `${r}${args[i]}${e}`
+    );
+    return dialog;
+  };
+}
+
+interface ElementOptions {
+  classList?: string | string[];
+  data?: Record<string, string>;
+  attributes?: Record<string, string>;
+}
+
+function element<N extends keyof HTMLElementTagNameMap>(
+  name: N,
+  options?: ElementOptions
+): (...args: [TemplateStringsArray, ...unknown[]]) => HTMLElementTagNameMap[N] {
+  return (...args) => {
+    const e = document.createElement(name);
+    if (options?.classList) {
+      e.classList.add(
+        ...(Array.isArray(options.classList)
+          ? options.classList
+          : [options.classList])
+      );
+    }
+    if (options?.data) {
+      for (const [name, value] of Object.entries(options.data)) {
+        e.setAttribute(`data-${name}`, value);
+      }
+    }
+    if (options?.attributes) {
+      for (const [name, value] of Object.entries(options.attributes)) {
+        e.setAttribute(name, value);
+      }
+    }
+    const TABLE = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+    } as const;
+    e.innerHTML = args[0].reduce(
+      (r, e, i) =>
+        `${r}${String(args[i]).replace(
+          /[&<>"]/g,
+          ch => TABLE[ch as keyof typeof TABLE]
+        )}${e}`
+    );
+    return e;
+  };
 }

@@ -16,7 +16,7 @@
 			"command": "npx",
 			"args": [
 				"dart-sass",
-				"css/",
+				"css/style.scss:css/style.css",
 				"--watch"
 			],
 			"group": "build",
