@@ -9,6 +9,12 @@ dialog.open-document {
       width: 100%;
       height: 100%;
       background-color: rgb(240, 240, 240);
+      border: solid 1px transparent;
+      overflow-y: auto;
+      &:focus-visible {
+        border-color: black;
+        outline: none;
+      }
       div.list-item {
         display: flex;
         flex-flow: row;
@@ -46,10 +52,16 @@ dialog.open-document {
           border: none;
           border-radius: 5px;
           &:hover {
-            background-color: rgba(0, 0, 0, 0.3);
+            border-bottom: solid 1px rgba(0, 0, 0, 0.3);
+            border-right: solid 1px rgba(0, 0, 0, 0.3);
+            border-top: none;
+            border-left: none;
           }
           &:active {
-            background-color: rgba(0, 0, 0, 0.5);
+            border-left: solid 1px rgba(0, 0, 0, 0.3);
+            border-top: solid 1px rgba(0, 0, 0, 0.3);
+            border-bottom: none;
+            border-right: none;
           }
 
           @at-root #{selector-replace(&, 'div.list-item', 'div.list-item:hover')} {
@@ -62,6 +74,17 @@ dialog.open-document {
         }
         button[name='delete'] {
           right: 0;
+          // ゴミ箱の絵文字がなぜか右に寄るのでちょっと広げる
+          width: 2.2em;
+        }
+      }
+      // リストが空のときの大体文字列
+      &:empty {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        &:after {
+          content: '保存されたドキュメントがありません。';
         }
       }
     }
@@ -70,10 +93,11 @@ dialog.open-document {
         margin: 10px 5px;
         width: 8em;
       }
-      // button:not([type="button"]) {
-      // }
-      // button[name="cancel"] {
-      // }
+      // 新規作成は順番を無視して左側に寄せる
+      button[name="new"] {
+        position: absolute;
+        left: 10px;
+      }
     }
   }
 }
