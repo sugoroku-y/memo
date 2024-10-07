@@ -10,7 +10,7 @@ const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
     }
     // キャレットの位置を記憶
     const {focusNode, focusOffset} = sel;
-    const li = ensureElement(focusNode)?.closest('li');
+    const li = closest(focusNode, 'li');
     if (!li) {
       // リストの項目上にキャレットがなければ無効
       return false;
@@ -31,9 +31,7 @@ const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
       ul.append(li);
       if (next && ['ul', 'ol'].includes(next.localName)) {
         // 項目の次がリストならそのリストの項目を移動して削除
-        for (const child of safeChildren(next)) {
-          ul.append(child);
-        }
+        ul.append(...next.childNodes);
         next.remove();
       }
     } else if (next && ['ul', 'ol'].includes(next.localName)) {
@@ -59,7 +57,7 @@ const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
     }
     // キャレットの位置を記憶
     const {focusNode, focusOffset} = sel;
-    const li = ensureElement(focusNode)?.closest('li');
+    const li = closest(focusNode, 'li');
     if (!li) {
       // リストの項目上にキャレットがなければ無効
       return false;
@@ -86,9 +84,7 @@ const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
     } else {
       // 親の複製に自分の後ろの兄弟を移動
       const nextUl = document.createElement(parent.localName);
-      for (const sibling of safeSiblings(li.nextSibling)) {
-        nextUl.append(sibling);
-      }
+      nextUl.append(...safeSiblings(li.nextSibling));
       // 項目を親の次に移動
       parent.after(li);
       // その次に親の複製を追加
@@ -107,8 +103,7 @@ const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
     }
     // キャレットの位置を記憶
     const {focusNode, focusOffset} = sel;
-    const focusElement = ensureElement(focusNode);
-    const li = focusElement?.closest('li');
+    const li = closest(focusNode, 'li');
     const parent = li?.parentElement?.closest('ul,ol');
     if (!li || !parent) {
       return false;
@@ -125,9 +120,8 @@ const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
         // 項目の次がリストならその先頭に移動
         next.prepend(li);
         if (li.previousElementSibling?.localName === next.localName) {
-          for (const child of safeChildren(next)) {
-            li.previousElementSibling.append(child);
-          }
+          // 項目の前も同じ種類のリストなら連結
+          li.previousElementSibling.append(...next.childNodes);
           next.remove();
         }
         break;
@@ -157,8 +151,7 @@ const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
     }
     // キャレットの位置を記憶
     const {focusNode, focusOffset} = sel;
-    const focusElement = ensureElement(focusNode);
-    const li = focusElement?.closest('li');
+    const li = closest(focusNode, 'li');
     const parent = li?.parentElement?.closest('ul,ol');
     if (!li || !parent) {
       return false;
@@ -199,7 +192,7 @@ const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
     if (!sel) {
       return false;
     }
-    const td = ensureElement(sel.focusNode)?.closest('td,th');
+    const td = closest(sel.focusNode, 'td,th');
     const tr = td?.closest('tr');
     if (!td || !tr || !tr.parentElement) {
       return false;
@@ -237,7 +230,7 @@ const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
       return false;
     }
     const {focusNode} = sel;
-    const td = ensureElement(focusNode)?.closest('td,th');
+    const td = closest(focusNode, 'td,th');
     if (!td) {
       return false;
     }
@@ -260,7 +253,7 @@ const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
     if (!sel?.isCollapsed) {
       return false;
     }
-    const td = ensureElement(sel.focusNode)?.closest('td,th');
+    const td = closest(sel.focusNode, 'td,th');
     if (!td || td.nextSibling) {
       // セル上にキャレットがなければ、もしくはキャレットのあるセルに次のセルがあれば何もしない
       return false;
@@ -310,7 +303,7 @@ const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
     if (!sel) {
       return false;
     }
-    const td = ensureElement(sel.focusNode)?.closest('td,th');
+    const td = closest(sel.focusNode, 'td,th');
     if (!td || td.previousSibling) {
       // セル上にキャレットがなければ、もしくはキャレットのあるセルに前のセルがあれば何もしない
       return false;
@@ -360,8 +353,8 @@ const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
       return false;
     }
     const sel = getSelection()!;
-    const em = ensureElement(sel.focusNode)?.closest('em');
-    if (em && em === ensureElement(sel.anchorNode)?.closest('em')) {
+    const em = closest(sel.focusNode, 'em');
+    if (em && em === closest(sel.anchorNode, 'em')) {
       // 選択範囲の始点と終点が同じem内にあれば強い強調(strong)にさしかえ
       const strong = replace(document.createElement('strong'), em);
       // strongの先頭から末尾までを選択
@@ -396,8 +389,8 @@ function checkSurroundStyledText(styledLocalName: string) {
     return false;
   }
   if (
-    ensureElement(sel.focusNode)?.closest(styledLocalName) ||
-    ensureElement(sel.anchorNode)?.closest(styledLocalName)
+    closest(sel.focusNode, styledLocalName) ||
+    closest(sel.anchorNode, styledLocalName)
   ) {
     // すでにstyledLocalNameが設定されていたら無効
     return false;
@@ -480,12 +473,7 @@ function surroundStyledText(styledLocalName: string) {
   }
   const styled = document.createElement(styledLocalName);
   (asElement(startNode) ?? asText(startNode))!.before(styled);
-  for (const child of safeSiblings(
-    startNode,
-    endNode?.nextSibling ?? undefined
-  )) {
-    styled.append(child);
-  }
+  styled.append(...safeSiblings(startNode, endNode?.nextSibling));
   sel.selectAllChildren(styled);
   return true;
 }
@@ -528,7 +516,7 @@ function deleteStyledElement(goBackword: boolean) {
     replace(document.createElement('em'), target);
   } else {
     parent = target.parentElement;
-    expand(target);
+    target.replaceWith(...target.childNodes);
   }
 
   sel.setPosition(focusNode, focusOffset);
@@ -541,8 +529,7 @@ function deleteTableCell(root: HTMLDivElement, goBackword: boolean) {
   if (!sel) {
     return false;
   }
-  const focusElement = ensureElement(sel.focusNode);
-  const td = focusElement?.closest('td,th');
+  const td = closest(sel.focusNode, 'td,th');
   if (!td) {
     return false;
   }
@@ -739,7 +726,7 @@ async function prepareEditor(root: HTMLDivElement) {
         case 'i':
         case 'font':
           // span,i,fontは使わないので展開
-          expand(element);
+          element.replaceWith(...element.childNodes);
           break;
         case 'br':
           if (element.parentElement === root) {
@@ -828,9 +815,7 @@ async function prepareEditor(root: HTMLDivElement) {
         } else {
           firstChild.remove();
         }
-        for (const sibling of safeSiblings(nextSibling)) {
-          li.append(sibling);
-        }
+        li.append(...safeSiblings(nextSibling));
         if (!li.firstChild) {
           const br = document.createElement('br');
           li.append(br);
@@ -985,10 +970,7 @@ async function prepareEditor(root: HTMLDivElement) {
           (!e.hasAttribute('href') ||
             !e.getAttribute('href')?.startsWith('https://')))
       ) {
-        for (const child of safeChildren(e)) {
-          e.before(child);
-        }
-        e.remove();
+        e.replaceWith(...e.childNodes);
         continue;
       }
       if (e.localName === 'a') {
