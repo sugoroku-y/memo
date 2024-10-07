@@ -11,10 +11,10 @@ async function applyHash(root: HTMLDivElement) {
       sel.setPosition(node, offset);
     }
   } else {
-    root.innerHTML = /* html */ `
+    root.innerHTML = html /* html */ `
       <h1># [${formatDate('YYYY-MM-DD hh:mm')}] memo<h1>
       <div><br/></div>
-    `.replace(/(?<=^|>)\s+(?=<|$)/g, '');
+    `;
     const br = root.querySelector('br')!;
     getSelection()?.setPosition(br.parentElement, 0);
   }

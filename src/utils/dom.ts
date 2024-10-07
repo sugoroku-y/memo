@@ -93,9 +93,7 @@ function dialog(
       'dialog',
       options
     )/* html */ `<form method="dialog"></form>`;
-    dialog.firstElementChild!.innerHTML = args[0].reduce(
-      (r, e, i) => `${r}${args[i]}${e}`
-    );
+    (dialog.firstElementChild as HTMLElement).innerHTML = html(...args);
     return dialog;
   };
 }
@@ -129,19 +127,28 @@ function element<N extends keyof HTMLElementTagNameMap>(
         e.setAttribute(name, value);
       }
     }
-    const TABLE = {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-    } as const;
-    e.innerHTML = args[0].reduce(
-      (r, e, i) =>
-        `${r}${String(args[i]).replace(
-          /[&<>"]/g,
-          ch => TABLE[ch as keyof typeof TABLE]
-        )}${e}`
-    );
+    e.innerHTML = html(...args);
     return e;
   };
+}
+
+type ENTITY_CHARS = '&'|'<'|'>'|'"';
+
+function entityize(s: string): string {
+  return s.replace(entityize.RE, (ch) => entityize.TABLE[ch as ENTITY_CHARS]);
+}
+
+entityize.TABLE = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+} as Record<ENTITY_CHARS, string>
+entityize.RE = new RegExp(`[${Object.keys(entityize.TABLE).join('')}]`, 'g');
+
+function html(...args: [TemplateStringsArray, ...unknown[]]): string {
+  return args[0].reduce(
+    (r, e, i) =>
+      `${r}${entityize(String(args[i]))}${e.replace(/(?<=^|>)\s+(?=<|$)/g, '')}`
+  );
 }
