@@ -94,97 +94,13 @@ const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
     sel.setPosition(focusNode, focusOffset);
     return true;
   },
-  // リストの項目を下に移動
-  ['alt+ArrowDown']() {
-    const sel = getSelection();
-    if (!sel?.isCollapsed) {
-      // 選択状態では無効
-      return false;
-    }
-    // キャレットの位置を記憶
-    const {focusNode, focusOffset} = sel;
-    const li = closest(focusNode, 'li');
-    const parent = li?.parentElement?.closest('ul,ol');
-    if (!li || !parent) {
-      return false;
-    }
-    // リストの項目上にキャレットがあればリストの項目を下に移動
-    const next = li.nextElementSibling;
-    switch (next?.localName) {
-      case 'li':
-        // 項目の次も項目ならその後ろに移動
-        next.after(li);
-        break;
-      case 'ul':
-      case 'ol':
-        // 項目の次がリストならその先頭に移動
-        next.prepend(li);
-        if (li.previousElementSibling?.localName === next.localName) {
-          // 項目の前も同じ種類のリストなら連結
-          li.previousElementSibling.append(...next.childNodes);
-          next.remove();
-        }
-        break;
-      case undefined:
-        if (
-          parent.parentElement &&
-          ['ul', 'ol'].includes(parent.parentElement.localName)
-        ) {
-          // 項目が一番最後で親の親がリストなら親の後ろに移動
-          parent.after(li);
-          if (!parent.firstElementChild) {
-            // 親が空っぽになったら削除
-            parent.remove();
-          }
-        }
-    }
-    // キャレットのあった位置を復元
-    sel.setPosition(focusNode, focusOffset);
-    return true;
+  // 行を下に移動
+  ['alt+ArrowDown'](root) {
+    return moveLine(root, 'forward');
   },
-  // リストの項目を上に移動/テーブルのセル間移動
-  ['alt+ArrowUp']() {
-    const sel = getSelection();
-    if (!sel?.isCollapsed) {
-      // 選択状態では無効
-      return false;
-    }
-    // キャレットの位置を記憶
-    const {focusNode, focusOffset} = sel;
-    const li = closest(focusNode, 'li');
-    const parent = li?.parentElement?.closest('ul,ol');
-    if (!li || !parent) {
-      return false;
-    }
-    // リストの項目上にキャレットがあればリストの項目を上に移動
-    const prev = li.previousElementSibling;
-    switch (prev?.localName) {
-      case 'li':
-        // 項目の前も項目ならその前に移動
-        prev.before(li);
-        break;
-      case 'ul':
-      case 'ol':
-        // 項目の前がリストならその末尾に移動
-        prev.append(li);
-        break;
-      case undefined:
-        if (
-          parent.parentElement &&
-          ['ul', 'ol'].includes(parent.parentElement.localName)
-        ) {
-          // 項目が一番先頭で親の親がリストなら親の前に移動
-          parent.before(li);
-          if (!parent.firstElementChild) {
-            // 親が空っぽになったら削除
-            parent.remove();
-          }
-        }
-        break;
-    }
-    // キャレットのあった位置を復元
-    sel.setPosition(focusNode, focusOffset);
-    return true;
+  // 行を上に移動
+  ['alt+ArrowUp'](root) {
+    return moveLine(root, 'backword');
   },
   // テーブルのセル間移動
   ['ArrowDown']() {
@@ -1024,4 +940,71 @@ async function prepareEditor(root: HTMLDivElement) {
     ev.dataTransfer.dropEffect = 'copy';
     ev.preventDefault();
   });
+}
+
+function moveLine(root: HTMLDivElement, direction: 'forward' | 'backword'): boolean {
+  const sel = getSelection();
+  if (!sel?.isCollapsed) {
+    // 選択状態では無効
+    return false;
+  }
+  // キャレットの位置を記憶
+  const {focusNode, focusOffset} = sel;
+  let line = closest(focusNode, 'li,div,h1,h2,h3,h4,h5,h6');
+  if (!line) {
+    return false;
+  }
+  // リストの項目上にキャレットがあればリストの項目を移動
+  const parent = line.localName === 'li' ? line.parentElement?.closest('ul,ol') : line.parentElement !== root ? line.parentElement : undefined;
+  const navar = line[direction === 'forward' ? 'nextElementSibling' : 'previousElementSibling'];
+  const against = line[direction === 'forward' ? 'previousElementSibling' : 'nextElementSibling'];
+  switch (navar?.localName) {
+    case 'ul':
+    case 'ol':
+      // 隣がリストならその中に移動
+      if (line.localName !== 'li') {
+        // リスト項目でなければliに置き換え
+        const li = document.createElement('li');
+        li.append(...line.childNodes);
+        line.remove();
+        line = li;
+      }
+      navar[direction === 'forward' ? 'prepend' : 'append'](line);
+      if (against?.localName === navar.localName) {
+        // 反対側の隣も同じ種類のリストなら連結
+        navar[direction === 'forward' ? 'prepend' : 'append'](...against.childNodes);
+        against.remove();
+      }
+      break;
+    case undefined:
+        // 一番端の項目
+      if (!parent) {
+        // 親がなければ何もしない
+        return false;
+      }
+      if (line.localName === 'li' && (!parent.parentElement || !['ul', 'ol'].includes(parent.parentElement.localName))) {
+        // 親の親がリストでなければdivに置き換え
+        const div = document.createElement('div');
+        div.append(...line.childNodes);
+        line.remove();
+        line= div;
+      }
+      // 親の隣に移動
+      parent[direction === 'forward' ? 'after' : 'before'](line);
+      if (!parent.firstElementChild) {
+        // 親が空っぽになったら削除
+        parent.remove();
+      }
+    
+      break;
+    default:
+      if (navar) {
+        // 隣のむこうに移動
+        navar[direction === 'forward' ? 'after' : 'before'](line);
+      }
+      break;
+  }
+  // キャレットのあった位置を復元
+  sel.setPosition(focusNode, focusOffset);
+  return true;
 }
