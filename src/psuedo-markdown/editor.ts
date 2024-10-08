@@ -102,6 +102,12 @@ const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
   ['alt+ArrowUp'](root) {
     return moveLine(root, 'backword');
   },
+  ['shift+alt+ArrowDown']() {
+    return copyLine('forward');
+  },
+  ['shift+alt+ArrowUp']() {
+    return copyLine('backword');
+  },
   // テーブルのセル間移動
   ['ArrowDown']() {
     const sel = getSelection();
@@ -491,7 +497,7 @@ async function prepareEditor(root: HTMLDivElement) {
     ev => {
       const listener =
         keymap[
-          `${ev.ctrlKey ? 'ctrl+' : ''}${ev.altKey ? 'alt+' : ''}${ev.key}`
+          `${ev.key.length > 1 && ev.shiftKey ? 'shift+' : ''}${ev.ctrlKey ? 'ctrl+' : ''}${ev.altKey ? 'alt+' : ''}${ev.key}`
         ];
       if (listener?.(root)) {
         ev.preventDefault();
@@ -1004,6 +1010,24 @@ function moveLine(root: HTMLDivElement, direction: 'forward' | 'backword'): bool
       }
       break;
   }
+  // キャレットのあった位置を復元
+  sel.setPosition(focusNode, focusOffset);
+  return true;
+}
+
+function copyLine(direction: 'forward' | 'backword'): boolean {
+  const sel = getSelection();
+  if (!sel?.isCollapsed) {
+    // 選択状態では無効
+    return false;
+  }
+  // キャレットの位置を記憶
+  const {focusNode, focusOffset} = sel;
+  const line = closest(focusNode, 'div,li');
+  if (!line) {
+    return false;
+  }
+  line[direction === 'forward' ? 'before' : 'after'](line.cloneNode(true));
   // キャレットのあった位置を復元
   sel.setPosition(focusNode, focusOffset);
   return true;
