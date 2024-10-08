@@ -8,6 +8,9 @@
 			"problemMatcher": [
 				"$tsc-watch"
 			],
+			"runOptions": {
+				"runOn": "folderOpen"
+			},
 			"group": "build",
 			"label": "tsc: watch"
 		},
@@ -19,6 +22,9 @@
 				"css/style.scss:css/style.css",
 				"--watch"
 			],
+			"runOptions": {
+				"runOn": "folderOpen"
+			},
 			"group": "build",
 			"label": "dart-sass: watch",
 			"problemMatcher": [
