@@ -1,7 +1,18 @@
 async function applyHash(root: HTMLDivElement) {
   const encoded = location.hash.slice(1);
-  if (encoded) {
-    root.innerHTML = await decodeHash(encoded);
+  const decoded = encoded && await decodeHash(encoded).catch(async () => {
+    const answer = await confirmDialog(`
+      復号に失敗しました。
+      保存しているパスワードをリセットしますか?
+      ※リセットしない場合新しいメモを開きます。
+      `.replace(/^ +/gm, '').slice(1, -1));
+    if (answer) {
+      resetKey();
+    }
+    location.replace(location.pathname);
+  });
+  if (decoded) {
+    root.innerHTML = decoded;
     const sel = getSelection();
     if (sel) {
       const {node, offset} = restoreFocusInfo(root) ?? {

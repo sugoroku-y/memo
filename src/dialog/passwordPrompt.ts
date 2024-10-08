@@ -14,6 +14,11 @@ declare const passwordPromptDialog: HTMLDialogElement;
 async function passwordPrompt() {
   const dlg = dialog({classList: 'password-prompt'})/* html */ `
     <label>パスワード: <input type="text"/></label>
+    <summary>
+      URLに積む内容を暗号化するためのパスワードです<br>
+      同じパスワードを使うことで同じURLを<br>
+      別のブラウザでも表示編集できます。
+    </summary>
     <button>設定</button>
   `;
   const input = dlg.querySelector('input')!;

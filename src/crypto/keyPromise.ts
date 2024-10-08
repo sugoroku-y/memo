@@ -14,3 +14,8 @@ const keyPromise = (async () => {
   localStorage.setItem('crypto-key', await exportKey(key));
   return key;
 })();
+
+function resetKey(): never {
+  localStorage.removeItem('crypto-key');
+  return location.reload() as never;
+}

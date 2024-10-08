@@ -1,6 +1,7 @@
 @import 'colors';
 @import 'password-dialog';
 @import 'open-document-dialog';
+@import 'confirm-dialog';
 
 $colors: $light;
 
@@ -147,5 +148,8 @@ dialog {
     border: none;
     width: 100%;
     height: 100%;
+    display: flex;
+    flex-flow: column;
+    align-items: end;
   }
 }
