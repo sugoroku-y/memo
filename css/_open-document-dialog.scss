@@ -19,8 +19,10 @@ dialog.open-document {
         display: flex;
         flex-flow: row;
         justify-content: space-between;
+        align-items: center;
         position: relative;
         background-color: rgb(240, 240, 224);
+        height: 2.5em;
         &:nth-child(even) {
           background-color: rgb(224, 240, 240);
         }
@@ -32,7 +34,6 @@ dialog.open-document {
           font-weight: bold;
         }
         div.list-item-title {
-          width: 60%;
           text-wrap: nowrap;
           overflow-x: hidden;
           text-overflow: ellipsis;
@@ -44,7 +45,9 @@ dialog.open-document {
           position: absolute;
           top: 0;
           bottom: 0;
-          width: 2em;
+          width: 2.2em;
+          height: 2.2em;
+          margin: auto 0;
           opacity: 0;
           pointer-events: none;
           transition: opacity 1s;
@@ -70,12 +73,16 @@ dialog.open-document {
           }
         }
         button[name='another-tab'] {
-          right: calc(2em + 5px);
+          right: calc(2.2em + 2px);
+          &::after {
+            content: '↗';
+          }
         }
         button[name='delete'] {
-          right: 0;
-          // ゴミ箱の絵文字がなぜか右に寄るのでちょっと広げる
-          width: 2.2em;
+          right: 2px;
+          &::after {
+            content: '\01f5d1\0fe0f';
+          }
         }
       }
       // リストが空のときの大体文字列

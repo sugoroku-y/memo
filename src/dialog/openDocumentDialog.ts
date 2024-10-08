@@ -25,8 +25,8 @@ function openDocumentDialog() {
             'YYYY-MM-DD hh:mm',
             lastModified
           )}</div>
-          <button type="button" name="another-tab" tabIndex="0">↗</button>
-          <button type="button" name="delete" tabIndex="0">\u{1f5d1}\ufe0f</button>
+          <button type="button" name="another-tab" tabIndex="0"></button>
+          <button type="button" name="delete" tabIndex="0"></button>
         `);
     }
   })();
