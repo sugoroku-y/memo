@@ -208,6 +208,10 @@ const memoDB = new DB<string, Memo>('memo', {
 });
 
 async function saveDocument(documentId: string, hash: string) {
+  const data =await memoDB.get('memo', documentId).catch(() => undefined);
+  if (data?.hash === hash) {
+    return;
+  }
   await memoDB.put('memo', documentId, {
     title: document.title,
     hash,
