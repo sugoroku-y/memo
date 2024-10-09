@@ -1,4 +1,5 @@
 let documentId: string | undefined;
+let modifiedSinceSaving = false;
 
 const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
   // リストのレベルを深くする
@@ -519,13 +520,16 @@ async function prepareEditor(root: HTMLDivElement) {
     }
   });
   new MutationObserver(mutations => {
-    // documentIdが未設定ならドキュメントから取得
-    documentId ??=
-      root
-        .querySelector('[data-document-id]')
-        ?.getAttribute('data-document-id') ??
-      // ドキュメントにもなければ乱数によって生成
-      [1, 2, 3].map(() => Math.random().toString(36).slice(2)).join('');
+    if (!documentId) {
+      // documentIdが未設定ならドキュメントから取得
+      documentId =
+        root
+          .querySelector('[data-document-id]')
+          ?.getAttribute('data-document-id') ??
+        // ドキュメントにもなければ乱数によって生成
+        [1, 2, 3].map(() => Math.random().toString(36).slice(2)).join('');
+      modifiedSinceSaving = false;
+    }
     const firstElement = root.firstElementChild;
     if (
       firstElement &&

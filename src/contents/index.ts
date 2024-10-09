@@ -1,19 +1,23 @@
 function contents(root: HTMLDivElement) {
   new MutationObserver(_mutations => {
     (async () => {
-      const data = getFocusInfo(root);
-      const encoded = await encodeHash(root.innerHTML);
-      if (location.hash.slice(1) === encoded) {
-        return;
-      }
-      const url = `${location.pathname}#${encoded}`;
-      if (location.hash) {
-        history.pushState(data, '', url);
-      } else {
-        history.replaceState(data, '', url);
-      }
-      if (documentId) {
-        saveDocument(documentId, encoded);
+      try {
+        const data = getFocusInfo(root);
+        const encoded = await encodeHash(root.innerHTML);
+        if (location.hash.slice(1) === encoded) {
+          return;
+        }
+        const url = `${location.pathname}#${encoded}`;
+        if (location.hash) {
+          history.pushState(data, '', url);
+        } else {
+          history.replaceState(data, '', url);
+        }
+        if (documentId && modifiedSinceSaving) {
+          saveDocument(documentId, encoded);
+        }
+      } finally {
+        modifiedSinceSaving = true;
       }
     })();
   }).observe(root, {
