@@ -1,14 +1,15 @@
 function openDocumentDialog() {
   let selected: string | undefined;
   const dlg = dialog({classList: 'open-document'})/*html*/ `
-      <div class="list" tabIndex="1"></div>
-      <div>
-        <button disabled tabIndex="2">開く</button>
-        <button type="button" name="cancel" tabIndex="3">キャンセル</button>
-        <button type="button" name="new" tabIndex="4">新規作成</button>
+      <button value="cancel" title="閉じる" tabIndex="-1"></button>
+      <div class="list" tabIndex="1" autofocus>
+        <div class="list-item-new">
+          <div class="list-item-title"><button value="new" title="新しいメモ"></button></div>
+          <div class="list-item-last-modified">最終更新日時</div>
+          <div class="list-item-buttons"></div>
+        </div>
       </div>
     `;
-  const openButton = dlg.querySelector('button:not([type="button"])')!;
   const list = dlg.querySelector('div.list')!;
   const currentDocumentId = documentId;
   (async () => {
@@ -20,50 +21,79 @@ function openDocumentDialog() {
         classList: 'list-item',
         data: {id},
       })/* html */ `
-          <div class='list-item-title' title="${title}">${title}</div>
-          <div class='list-item-last-modified'>${formatDate(
+          <div class="list-item-title" title="${title}">${title}</div>
+          <div class="list-item-last-modified">${formatDate(
             'YYYY-MM-DD hh:mm',
             lastModified
           )}</div>
-          <button type="button" name="another-tab" tabIndex="0"></button>
-          <button type="button" name="delete" tabIndex="0"></button>
+          <div class="list-item-buttons">
+            <button type="button" name="open" title="開く" tabIndex="-1"></button>
+            <button type="button" name="another-tab" title="別タブで開く" tabIndex="-1"></button>
+            <button type="button" name="delete" title="削除" tabIndex="-1"></button>
+          </div>
         `);
     }
   })();
-  const selectItem = (id?: string, item?: Element) => {
+  const selectItem = (item?: Element) => {
+    list.focus();
     for (const other of list.querySelectorAll('[data-selected]')) {
       other.removeAttribute('data-selected');
     }
-    item?.setAttribute('data-selected', 'true');
-    selected = id;
-    openButton.disabled = id == null;
-  };
-  const selectNextItem = (direction: 'next' | 'previous') => {
-    const item =
-      list.querySelector(`.list-item[data-selected]`)?.[
-        `${direction}ElementSibling`
-      ] ?? list.firstElementChild;
+    for (const button of list.querySelectorAll(
+      '.list-item button:not([tabindex="-1"])'
+    )) {
+      button.tabIndex = -1;
+    }
     if (!item) {
+      return;
+    }
+    item.setAttribute('data-selected', 'true');
+    for (const button of item.querySelectorAll('button[tabindex]')) {
+      button.tabIndex = 0;
+    }
+    selected = item.getAttribute('data-id') ?? undefined;
+  };
+  const selectNextItem = (direction: 'forward' | 'backword') => {
+    const selected = list.querySelector(`.list-item[data-selected]`);
+    const item = selected
+      ? selected?.[
+          `${direction === 'forward' ? 'next' : 'previous'}ElementSibling`
+        ]
+      : list.querySelector('.list-item');
+    if (!item?.classList.contains('list-item')) {
       return false;
     }
-    const newId = item?.getAttribute('data-id');
-    if (!newId) {
-      return false;
-    }
-    selectItem(newId, item);
+    selectItem(item);
     return true;
   };
   list.addEventListener('keydown', ev => {
     switch (`${ev.ctrlKey ? 'ctrl+' : ''}${ev.altKey ? 'alt+' : ''}${ev.key}`) {
       case 'ArrowUp':
-        selectNextItem('previous') && ev.preventDefault();
+        selectNextItem('backword') && ev.preventDefault();
         return;
       case 'ArrowDown':
-        selectNextItem('next') && ev.preventDefault();
+        selectNextItem('forward') && ev.preventDefault();
         return;
       case 'Enter':
-        dlg.querySelector('button:not([type="button"])')?.click();
+        {
+          const target =
+            (ev.target as HTMLElement).closest('button') ??
+            list.querySelector(`.list-item[data-id="${selected}"]`);
+          if (!target) {
+            break;
+          }
+          target.click();
+          ev.preventDefault();
+          ev.stopPropagation();
+        }
         return;
+    }
+  });
+  dlg.addEventListener('close', ev => {
+    if (dlg.returnValue === 'new') {
+      documentId = undefined;
+      location.hash = '';
+      return;
     }
   });
   dlg.addEventListener('click', ev => {
@@ -72,47 +102,50 @@ function openDocumentDialog() {
     if (button?.type === 'submit') {
       return;
     }
-    if (button?.name === 'cancel') {
-      dlg.close();
-      return;
-    }
-    if (button?.name === 'new') {
-      dlg.close();
-      documentId = undefined;
-      location.hash = '';
-      return;
-    }
     const item = target.closest('.list-item');
     if (!item) {
       selectItem();
       return;
     }
     const id = item.getAttribute('data-id')!;
-    if (button) {
-      switch (button.name) {
-        case 'another-tab':
-          loadDocument(id).then(hash => window.open(`#${hash}`, '_blank'));
-          break;
-        case 'delete':
-          deleteDocument(id).then(() => item.remove());
-          break;
-      }
-      return;
+    switch (button?.name) {
+      case 'another-tab':
+        (async () => {
+          const hash = await loadDocument(id);
+          window.open(`#${hash}`, '_blank');
+        })();
+        ev.preventDefault();
+        ev.stopPropagation();
+        break;
+      case 'delete':
+        (async () => {
+          const answer = await confirmDialog(
+            `${
+              item.querySelector('.list-item-title')?.title ?? ''
+            }を削除します。\nよろしいですか?`
+          );
+          if (!answer) {
+            return;
+          }
+          await deleteDocument(id);
+          item.remove();
+        })();
+        ev.preventDefault();
+        ev.stopPropagation();
+        break;
+      default:
+        (async () => {
+          const hash = await loadDocument(id);
+          if (!hash) {
+            return;
+          }
+          dlg.close();
+          documentId = selected;
+          location.hash = `#${hash}`;
+        })();
+        break;
     }
-    selectItem(id, item);
-  });
-  dlg.addEventListener('submit', ev => {
-    if (!selected) {
-      ev.preventDefault();
-      return;
-    }
-    loadDocument(selected).then(hash => {
-      documentId = selected;
-      location.hash = `#${hash}`;
-    });
-  });
-  dlg.addEventListener('close', () => {
-    dlg.remove();
+    return;
   });
   document.body.append(dlg);
   dlg.showModal();

@@ -1,107 +1,178 @@
 dialog.open-document {
   width: 80%;
   height: 80%;
-  > form {
-    div.list {
-      width: 100%;
-      height: 100%;
-      background-color: rgb(240, 240, 240);
-      border: solid 1px transparent;
-      overflow-y: auto;
+  padding-top: 2.4em;
+  div.list {
+    width: 100%;
+    height: 100%;
+    background-color: rgb(240, 240, 240);
+    border: solid 1px transparent;
+    overflow-y: auto;
+    &:focus-visible {
+      border-color: black;
+      outline: none;
+    }
+
+    button {
+      width: 2.4em;
+      height: 2.4em;
+      background-color: transparent;
+      border-bottom: solid 1px transparent;
+      border-right: solid 1px transparent;
+      border-top: none;
+      border-left: none;
+      border-radius: 1.2em;
+      &:focus-visible,
+      &:hover {
+        border-bottom: solid 1px rgba(0, 0, 0, 0.3);
+        border-right: solid 1px rgba(0, 0, 0, 0.3);
+        border-top: none;
+        border-left: none;
+      }
+      &:active {
+        border-bottom: none;
+        border-right: none;
+        border-top: solid 1px rgba(0, 0, 0, 0.3);
+        border-left: solid 1px rgba(0, 0, 0, 0.3);
+      }
       &:focus-visible {
-        border-color: black;
         outline: none;
       }
-      div.list-item {
-        display: flex;
-        flex-flow: row;
-        justify-content: space-between;
-        align-items: center;
-        position: relative;
-        background-color: rgb(240, 240, 224);
-        height: 2.5em;
-        &:nth-child(even) {
-          background-color: rgb(224, 240, 240);
-        }
-        &:hover {
-          background-color: rgb(200, 240, 200);
-        }
-        &[data-selected] {
-          background-color: rgb(200, 200, 240);
-          font-weight: bold;
-        }
-        div.list-item-title {
-          text-wrap: nowrap;
-          overflow-x: hidden;
-          text-overflow: ellipsis;
-        }
-        div.list-item-last-modified {
-          width: 14em;
-        }
-        button {
-          position: absolute;
-          top: 0;
-          bottom: 0;
-          width: 2.2em;
-          height: 2.2em;
-          margin: auto 0;
-          opacity: 0;
-          pointer-events: none;
-          transition: opacity 1s;
-          background-color: transparent;
-          border: none;
-          border-radius: 5px;
-          &:hover {
-            border-bottom: solid 1px rgba(0, 0, 0, 0.3);
-            border-right: solid 1px rgba(0, 0, 0, 0.3);
-            border-top: none;
-            border-left: none;
-          }
-          &:active {
-            border-left: solid 1px rgba(0, 0, 0, 0.3);
-            border-top: solid 1px rgba(0, 0, 0, 0.3);
-            border-bottom: none;
-            border-right: none;
-          }
+    }
 
-          @at-root #{selector-replace(&, 'div.list-item', 'div.list-item:hover')} {
-            pointer-events: auto;
-            opacity: 1;
-          }
-        }
-        button[name='another-tab'] {
-          right: calc(2.2em + 2px);
-          &::after {
-            content: '↗';
-          }
-        }
-        button[name='delete'] {
-          right: 2px;
-          &::after {
-            content: '\01f5d1\0fe0f';
-          }
-        }
+    div.list-item,
+    div.list-item-new {
+      div.list-item-title {
+        text-wrap: nowrap;
+        overflow-x: hidden;
+        text-overflow: ellipsis;
+        flex: 1 1;
       }
-      // リストが空のときの大体文字列
-      &:empty {
+      div.list-item-last-modified {
+        text-wrap: nowrap;
+        flex: 0 0 10em;
+      }
+      div.list-item-buttons {
         display: flex;
         align-items: center;
-        justify-content: center;
-        &:after {
-          content: '保存されたドキュメントがありません。';
+        text-wrap: nowrap;
+        padding-right: 2px;
+        flex: 0 0 2.4em * 3;
+        &:empty::after {
+          content: '';
         }
       }
     }
-    > div {
-      > button {
-        margin: 10px 5px;
+
+    div.list-item {
+      display: flex;
+      flex-flow: row;
+      justify-content: space-between;
+      align-items: center;
+      height: 2.6em;
+      &[data-selected],
+      &:hover {
+        background-color: rgb(224, 224, 224);
+      }
+      &[data-selected] {
+        font-weight: bold;
+      }
+      button {
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 1s;
+
+        @at-root #{selector-replace(&, 'div.list-item', 'div.list-item:hover')} {
+          pointer-events: auto;
+          opacity: 1;
+        }
+        @at-root #{selector-replace(&, 'div.list-item', 'div.list-item[data-selected]')} {
+          opacity: 1;
+        }
+      }
+      button[name='another-tab'] {
+        &::after {
+          content: '↗';
+        }
+      }
+      button[name='open'] {
+        &::after {
+          content: '▶';
+        }
+      }
+      button[name='delete'] {
+        &::after {
+          content: '\01f5d1\0fe0f';
+        }
+      }
+    }
+    div.list-item-new {
+      display: flex;
+      flex-flow: row;
+      justify-content: space-between;
+      align-items: center;
+      height: 2.6em;
+      button {
+        margin-left: 5px;
         width: 8em;
+        &::after {
+          content: '➕新しいメモ';
+        }
       }
-      // 新規作成は順番を無視して左側に寄せる
-      button[name="new"] {
-        position: absolute;
-        left: 10px;
+      // リストが空のときの代替文字列
+      &:last-child {
+        flex-flow: column;
+        justify-content: center;
+        align-items: start;
+        background-color: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 50%;
+        &:before {
+          content: '保存されたメモがありません。';
+          display: block;
+          margin: 50% auto 0;
+        }
+        .list-item-title {
+          overflow: visible;
+        }
+        button {
+          display: block;
+          margin: 0 auto;
+        }
+        .list-item-last-modified {
+          display: none;
+        }
       }
+    }
+  }
+  button[value="cancel"] {
+    width: 2.4em;
+    height: 2.4em;
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: transparent;
+    border-radius: 50%;
+    border-top: solid 1px transparent;
+    border-left: solid 1px transparent;
+    border-bottom: none;
+    border-right: none;
+    &:hover {
+      border-top: none;
+      border-left: none;
+      border-bottom: solid 1px lightgray;
+      border-right: solid 1px lightgray;
+    }
+    &:active {
+      border-top: solid 1px lightgray;
+      border-left: solid 1px lightgray;
+      border-bottom: none;
+      border-right: none;
+    }
+    &::after {
+      content: '❌';
     }
   }
 }
