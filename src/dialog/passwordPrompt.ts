@@ -42,7 +42,6 @@ async function passwordPrompt() {
   return await new Promise<string>(resolve => {
     dlg.addEventListener('close', () => {
       resolve(dlg.returnValue);
-      dlg.remove();
     });
   });
 }

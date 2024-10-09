@@ -137,6 +137,9 @@ function dialog(options?: ElementOptions<'dialog'>) {
   return (...args: [TemplateStringsArray, ...unknown[]]) => {
     const dialog = element('dialog', options)``;
     dialog.append(element('form', {properties: {method: 'dialog'}})(...args));
+    dialog.addEventListener('close', () => {
+      dialog.remove();
+    })
     return dialog;
   };
 }
