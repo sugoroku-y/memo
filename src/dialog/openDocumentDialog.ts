@@ -91,8 +91,7 @@ function openDocumentDialog() {
   });
   dlg.addEventListener('close', ev => {
     if (dlg.returnValue === 'new') {
-      documentId = undefined;
-      location.hash = '';
+      location.replace(location.pathname);
       return;
     }
   });
