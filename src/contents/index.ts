@@ -30,5 +30,9 @@ function contents(root: HTMLDivElement) {
   window.addEventListener('popstate', () => {
     void applyHash(root);
   });
-  applyHash(root);
+  if (new URLSearchParams(location.search).has('open')) {
+    openDocumentDialog()
+  } else {
+    applyHash(root);
+  }
 }

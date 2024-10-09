@@ -4,15 +4,22 @@
   "name": "メモ書き",
   "display": "standalone",
   "start_url": "./",
-  "shortcuts": [{
-    "name": "新規メモ",
-    "short_name": "New",
-    "url": "./"
-  }],
+  "shortcuts": [
+    {
+      "name": "新規メモ",
+      "short_name": "New",
+      "url": "./"
+    },
+    {
+      "name": "保存したメモを開く",
+      "short_name": "Open",
+      "url": "./?open"
+    }
+  ],
   "icons": [
-      {
-          "src": "memo-pencil-svgrepo-com.svg",
-          "sizes": "192x192"
-      }
+    {
+      "src": "memo-pencil-svgrepo-com.svg",
+      "sizes": "192x192"
+    }
   ]
 }
