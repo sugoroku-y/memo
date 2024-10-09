@@ -122,26 +122,24 @@ dialog.open-document {
       // リストが空のときの代替文字列
       &:last-child {
         flex-flow: column;
-        justify-content: center;
-        align-items: start;
         background-color: transparent;
         display: flex;
         align-items: center;
         justify-content: center;
-        height: 50%;
-        &:before {
-          content: '保存されたメモがありません。';
-          display: block;
-          margin: 50% auto 0;
-        }
+        height: 100%;
         .list-item-title {
-          overflow: visible;
+          flex: 0 0 auto;
+          &:before {
+            content: '保存されたメモがありません。';
+            display: block;
+          }
+          button {
+            margin: 0 auto;
+            display: block;
+          }
         }
-        button {
-          display: block;
-          margin: 0 auto;
-        }
-        .list-item-last-modified {
+        .list-item-last-modified,
+        .list-item-buttons {
           display: none;
         }
       }
