@@ -1,13 +1,8 @@
 dialog.confirm {
-  form {
-    display: flex;
-    flex-flow: column;
-    align-items: end;
-    div.message {
-      white-space: pre-wrap;
-    }
-    button {
-      margin-right: 10px;
-    }
+  div.message {
+    white-space: pre-wrap;
+  }
+  button {
+    margin-right: 10px;
   }
 }
