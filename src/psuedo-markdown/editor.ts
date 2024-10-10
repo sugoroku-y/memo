@@ -135,9 +135,8 @@ const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
       const cellCount = cells.length;
       let focusCell;
       for (let i = 0; i < cellCount; ++i) {
-        const newTd = document.createElement('td');
+        const newTd = element('td')`<br>`;
         newTr.append(newTd);
-        newTd.append(document.createElement('br'));
         if (i === index) {
           focusCell = newTd;
         }
@@ -203,14 +202,10 @@ const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
     const index = tr?.querySelectorAll(`tr > th, tr > td`).length ?? 0;
     for (const row of table?.querySelectorAll('tr') ?? []) {
       // その行の先頭のセルを複製する(なければtd)
-      let localName = row.firstElementChild?.localName;
-      if (localName !== 'th' && localName !== 'td') {
-        localName = 'td';
-      }
+      let _localName = row.firstElementChild?.localName;
+      const localName = _localName === 'th' || _localName === 'td' ? _localName : 'td';
       while (index >= row.querySelectorAll(`tr > th, tr > td`).length) {
-        const cell = document.createElement(localName);
-        cell.append(document.createElement('br'));
-        row.append(cell);
+        row.append(element(localName)`<br>`);
       }
     }
     // キャレットを次のセルに移動
@@ -551,10 +546,7 @@ async function prepareEditor(root: HTMLDivElement) {
     }
     if (!root.firstChild) {
       // contentBoxが空になったら<div><br></div>を挿入
-      const div = document.createElement('div');
-      const br = document.createElement('br');
-      root.append(div);
-      div.append(br);
+      root.append(element('div')`<br>`);
       // 挿入したdivにキャレットを移す
       sel.setPosition(root.firstChild, 0);
       return;
@@ -581,19 +573,19 @@ async function prepareEditor(root: HTMLDivElement) {
         }
       })()
     )) {
-      const element = asElement(node);
-      if (!element) {
+      const elm = asElement(node);
+      if (!elm) {
         continue;
       }
-      switch (element.localName) {
+      switch (elm.localName) {
         case 'div':
         case 'li':
           {
-            const br = element.querySelector('br:first-child:last-child');
+            const br = elm.querySelector('br:first-child:last-child');
             BLOCK: if (br) {
               for (
                 let ancestor = br.parentElement;
-                ancestor && ancestor !== element;
+                ancestor && ancestor !== elm;
                 ancestor = ancestor.parentElement
               ) {
                 if (
@@ -614,21 +606,21 @@ async function prepareEditor(root: HTMLDivElement) {
                 }
               }
               // div/liが文字装飾要素だけのbrを子孫に持つ場合はbrだけを残す
-              element.firstChild?.replaceWith(br);
+              elm.firstChild?.replaceWith(br);
             }
           }
           break;
         case 'a':
           {
             // aタグはhref以外の属性を除去
-            for (const {localName} of element.attributes) {
+            for (const {localName} of elm.attributes) {
               if (localName === 'href') {
                 continue;
               }
-              element.removeAttribute(localName);
+              elm.removeAttribute(localName);
             }
             // styleはattributesに並ばないので特別扱い
-            element.removeAttribute('style');
+            elm.removeAttribute('style');
           }
           break;
         case 'h1':
@@ -637,13 +629,12 @@ async function prepareEditor(root: HTMLDivElement) {
         case 'h4':
         case 'h5':
         case 'pre':
-          if (element.firstChild === element.lastChild) {
-            const child = asElement(element.firstChild);
+          if (elm.firstChild === elm.lastChild) {
+            const child = asElement(elm.firstChild);
             if (child?.localName === 'br') {
               // h*、preがbr要素1つだけを子に持つ場合はdivに差し替え
-              const div = document.createElement('div');
-              div.append(document.createElement('br'));
-              element.replaceWith(div);
+              const div = element('div')`<br>`;
+              elm.replaceWith(div);
               sel.setPosition(div, 0);
             }
           }
@@ -652,14 +643,14 @@ async function prepareEditor(root: HTMLDivElement) {
         case 'i':
         case 'font':
           // span,i,fontは使わないので展開
-          element.replaceWith(...element.childNodes);
+          elm.replaceWith(...elm.childNodes);
           break;
         case 'br':
-          if (element.parentElement === root) {
+          if (elm.parentElement === root) {
             // ルート直下にあるbrはdivタグの中に入れる
             const div = document.createElement('div');
-            element.replaceWith(div);
-            div.append(element);
+            elm.replaceWith(div);
+            div.append(elm);
             sel.setPosition(div, 0);
           }
           break;
@@ -690,27 +681,20 @@ async function prepareEditor(root: HTMLDivElement) {
         continue;
       }
       if (target.data === '|||' && isEndOfLine(target)) {
-        const table = document.createElement('table');
-        const tbody = document.createElement('tbody');
-        const headerLine = document.createElement('tr');
-        const header1 = document.createElement('th');
-        const header2 = document.createElement('th');
-        const dataLine = document.createElement('tr');
-        const data1 = document.createElement('td');
-        const data2 = document.createElement('td');
-        header1.textContent = 'Header1';
-        header2.textContent = 'Header2';
-        data1.textContent = 'Data1';
-        data2.textContent = 'Data2';
-        tbody.append(headerLine);
-        headerLine.append(header1);
-        headerLine.append(header2);
-        tbody.append(dataLine);
-        dataLine.append(data1);
-        dataLine.append(data2);
-        table.append(tbody);
+        const table = element('table')/*html*/ `
+          <tbody>
+            <tr>
+              <th>Header1</th>
+              <th>Header2</th>
+            </tr>
+            <tr>
+              <td>Data1</td>
+              <td>Data2</td>
+            </tr>
+          </tbody>
+        `;
         target.replaceWith(table);
-        sel.setPosition(header1, 0);
+        sel.setPosition(table.querySelector('th'), 0);
         continue;
       }
       if (target.data === '```' && isEndOfLine(target)) {
@@ -758,11 +742,12 @@ async function prepareEditor(root: HTMLDivElement) {
         parent.parentElement?.localName === 'ul'
       ) {
         let {focusNode, focusOffset} = sel;
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        if (target.data.charAt(1) === 'x') {
-          checkbox.setAttribute('checked', 'true');
-        }
+        const checkbox = element('input', {
+          properties: {
+            type: 'checkbox',
+            checked: target.data.charAt(1) === 'x',
+          },
+        })``;
         const text = target.splitText(4);
         target.replaceWith(checkbox);
         if (focusNode === target) {
