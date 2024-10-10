@@ -60,7 +60,7 @@ function isEndOfLine(node: Node): boolean {
   }
   const element = asElement(node.nextSibling);
   if (!element) {
-    return false;
+    return asText(node.nextSibling)?.data === '' && isEndOfLine(node.nextSibling);
   }
   if (element.localName === 'br') {
     return true;
