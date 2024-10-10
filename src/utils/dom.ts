@@ -91,12 +91,14 @@ entityize.RE = new RegExp(`[${Object.keys(entityize.TABLE).join('')}]`, 'g');
 function html(template: TemplateStringsArray, ...values: unknown[]): string {
   return ''.concat(
     ...(function* () {
-      const templateIterator = template[Symbol.iterator]();
-      yield templateIterator.next().value!;
       const valueIterator = values[Symbol.iterator]();
-      for (const e of templateIterator) {
-        yield entityize(String(valueIterator.next().value));
-        yield e.replace(/(?<=^|>)\s+(?=<|$)/g, '');
+      for (const e of template) {
+        yield e.replace(/(?<=^|>)\s+|\s+(?=<|$)/g, '');
+        const {value, done} = valueIterator.next();
+        if (done) {
+          break;
+        }
+        yield entityize(String(value));
       }
     })()
   );
