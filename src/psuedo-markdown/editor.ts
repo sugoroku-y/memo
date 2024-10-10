@@ -244,7 +244,7 @@ const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
     return true;
   },
   ['ctrl+o']() {
-    openDocumentDialog();
+    openDocumentDialog(documentId);
     return true;
   },
   // テーブルのセル削除

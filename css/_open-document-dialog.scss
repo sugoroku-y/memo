@@ -191,5 +191,8 @@ dialog.open-document {
     &::after {
       content: '❌';
     }
+    &:disabled {
+      display: none;
+    }
   }
 }

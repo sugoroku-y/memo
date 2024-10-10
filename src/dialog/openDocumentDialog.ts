@@ -1,4 +1,4 @@
-function openDocumentDialog() {
+function openDocumentDialog(currentDocumentId?: string) {
   const dlg = dialog({classList: 'open-document'})/*html*/ `
     <div class="list">
       <div class="list-item-new">
@@ -7,10 +7,11 @@ function openDocumentDialog() {
         <div class="list-item-buttons"></div>
       </div>
     </div>
-    <button value="cancel" title="閉じる" tabIndex="-1"></button>
+    <button value="cancel" title="閉じる" tabIndex="-1" ${
+      currentDocumentId ? '' : 'disabled'
+    }></button>
   `;
   const list = dlg.querySelector('div.list')!;
-  const currentDocumentId = documentId;
   (async () => {
     for await (const [id, {title, lastModified}] of listDocuments()) {
       if (id === currentDocumentId) {
@@ -131,6 +132,13 @@ function openDocumentDialog() {
       return;
     }
   });
+  if (!currentDocumentId) {
+    dlg.addEventListener('keydown', ev => {
+      if (!ev.shiftKey && !ev.altKey && !ev.ctrlKey && ev.key === 'Escape') {
+        ev.preventDefault();
+      }
+    });
+  }
   document.body.append(dlg);
   dlg.showModal();
 }
