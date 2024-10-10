@@ -91,8 +91,23 @@ dialog.open-document {
         }
       }
       button[name='another-tab'] {
+        position: relative;
+        &::before {
+          content: '';
+          display: block;
+          position: absolute;
+          bottom: 0.6em;
+          left: 0.6em;
+          width: 0.9em;
+          height: 0.9em;
+          border: solid 1px currentColor;
+        }
         &::after {
           content: '↗';
+          display: block;
+          position: absolute;
+          bottom: 0.7em;
+          left: 1.1em;
         }
       }
       button[name='open'] {
