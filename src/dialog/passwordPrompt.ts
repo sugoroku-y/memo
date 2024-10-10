@@ -29,9 +29,15 @@ async function passwordPrompt() {
     }
     button.disabled = input.value.length < 5;
   });
-  dlg.addEventListener('cancel', ev => {
-    ev.preventDefault();
-  });
+  dlg.addEventListener(
+    'keydown',
+    ev => {
+      if (!ev.shiftKey && !ev.altKey && !ev.ctrlKey && ev.key === 'Escape') {
+        ev.preventDefault();
+      }
+    },
+    true
+  );
   dlg.addEventListener('submit', () => {
     dlg.returnValue = input.value;
   });
