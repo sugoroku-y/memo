@@ -582,7 +582,7 @@ async function prepareEditor(root: HTMLDivElement) {
         case 'li':
           {
             const br = elm.querySelector('br:first-child:last-child');
-            BLOCK: if (br) {
+            BLOCK: if (br && !br.previousSibling && !br.nextSibling) {
               for (
                 let ancestor = br.parentElement;
                 ancestor && ancestor !== elm;
