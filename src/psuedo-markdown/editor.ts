@@ -643,7 +643,12 @@ async function prepareEditor(root: HTMLDivElement) {
         case 'i':
         case 'font':
           // span,i,fontは使わないので展開
-          elm.replaceWith(...elm.childNodes);
+          {
+            const parent = elm.parentElement;
+            elm.replaceWith(...elm.childNodes);
+            // 展開することにより隣接するようになったテキストノードを連結
+            parent?.normalize();
+          }
           break;
         case 'br':
           if (elm.parentElement === root) {
@@ -900,6 +905,8 @@ async function prepareEditor(root: HTMLDivElement) {
         continue;
       }
     }
+    // サポート外の要素除去などにより隣接するようになったテキストノードを連結
+    source.normalize();
     // ドロップ位置を取得
     const {offset, offsetNode} = document.caretPositionFromPoint?.(
       ev.x,
