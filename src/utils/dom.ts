@@ -86,11 +86,16 @@ entityize.TABLE = {
 } satisfies Record<ENTITY_CHARS, string>;
 entityize.RE = new RegExp(`[${Object.keys(entityize.TABLE).join('')}]`, 'g');
 
-function html(...args: [TemplateStringsArray, ...unknown[]]): string {
-  return args[0].reduce(
-    (r, e, i) =>
-      `${r}${entityize(String(args[i]))}${e.replace(/(?<=^|>)\s+(?=<|$)/g, '')}`
-  );
+function html(template: TemplateStringsArray, ...values: unknown[]): string {
+  return ''.concat(...function*() {
+    const templateIterator = template[Symbol.iterator]();
+    yield templateIterator.next().value!;
+    const valueIterator = values[Symbol.iterator]();
+    for (const e of templateIterator) {
+      yield entityize(String(valueIterator.next().value));
+      yield e.replace(/(?<=^|>)\s+(?=<|$)/g, '');
+    }
+  }());
 }
 
 interface ElementOptions<N extends keyof HTMLElementTagNameMap> {
