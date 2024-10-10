@@ -70,6 +70,7 @@ dialog.open-document {
       justify-content: space-between;
       align-items: center;
       height: 2.6em;
+      outline: none;
       &[data-selected],
       &:hover {
         background-color: rgb(224, 224, 224);
@@ -79,15 +80,18 @@ dialog.open-document {
       }
       button {
         opacity: 0;
+        visibility: hidden;
         pointer-events: none;
         transition: opacity 1s;
 
         @at-root #{selector-replace(&, 'div.list-item', 'div.list-item:hover')} {
           pointer-events: auto;
+          visibility: visible;
           opacity: 1;
         }
         @at-root #{selector-replace(&, 'div.list-item', 'div.list-item[data-selected]')} {
           opacity: 1;
+          visibility: visible;
         }
       }
       button[name='another-tab'] {
