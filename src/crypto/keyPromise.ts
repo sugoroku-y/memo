@@ -1,7 +1,6 @@
 /**
  * localStorageに保存したキーがあればそちらを、なければ入力されたパスワードからキーを生成
  */
-
 const keyPromise = (async () => {
   const saved = localStorage.getItem('crypto-key');
   if (saved) {
@@ -15,6 +14,10 @@ const keyPromise = (async () => {
   return key;
 })();
 
+/**
+ * localStorageに保存したキーをクリアしてリロードする。
+ * @returns 
+ */
 function resetKey(): never {
   localStorage.removeItem('crypto-key');
   return location.reload() as never;

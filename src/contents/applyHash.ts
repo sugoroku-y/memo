@@ -1,6 +1,6 @@
 async function applyHash(root: HTMLDivElement) {
   const encoded = location.hash.slice(1);
-  const decoded = encoded && await decodeHash(encoded).catch(async () => {
+  const decoded = encoded && await decodeHash(await keyPromise, encoded).catch(async () => {
     const answer = await confirmDialog(`
       復号に失敗しました。
       保存しているパスワードをリセットしますか?

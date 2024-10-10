@@ -3,7 +3,7 @@ function contents(root: HTMLDivElement) {
     (async () => {
       try {
         const data = getFocusInfo(root);
-        const encoded = await encodeHash(root.innerHTML);
+        const encoded = await encodeHash(await keyPromise, root.innerHTML);
         if (location.hash.slice(1) === encoded) {
           return;
         }

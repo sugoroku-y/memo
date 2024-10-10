@@ -1,3 +1,3 @@
-async function encrypt(value: ArrayBuffer | ArrayBufferView) {
-  return crypto.subtle.encrypt(algorismWithIv, await keyPromise, value);
+function encrypt(key: CryptoKey, value: ArrayBuffer | ArrayBufferView) {
+  return crypto.subtle.encrypt(algorismWithIv, key, value);
 }

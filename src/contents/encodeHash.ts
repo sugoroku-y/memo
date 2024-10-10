@@ -7,9 +7,9 @@
  * 4. バイナリ -> Base64
  * @param {string} source encodeする文字列
  */
-async function encodeHash(source: string): Promise<string> {
+async function encodeHash(key: CryptoKey, source: string): Promise<string> {
   return encodeBase64(
-    await encrypt(
+    await encrypt(key, 
       await new Response(
         new Blob([source]).stream().pipeThrough(new CompressionStream('gzip'))
       ).arrayBuffer()
