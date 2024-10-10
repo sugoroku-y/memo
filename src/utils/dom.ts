@@ -60,7 +60,9 @@ function isEndOfLine(node: Node): boolean {
   }
   const element = asElement(node.nextSibling);
   if (!element) {
-    return asText(node.nextSibling)?.data === '' && isEndOfLine(node.nextSibling);
+    return (
+      asText(node.nextSibling)?.data === '' && isEndOfLine(node.nextSibling)
+    );
   }
   if (element.localName === 'br') {
     return true;
@@ -87,22 +89,24 @@ entityize.TABLE = {
 entityize.RE = new RegExp(`[${Object.keys(entityize.TABLE).join('')}]`, 'g');
 
 function html(template: TemplateStringsArray, ...values: unknown[]): string {
-  return ''.concat(...function*() {
-    const templateIterator = template[Symbol.iterator]();
-    yield templateIterator.next().value!;
-    const valueIterator = values[Symbol.iterator]();
-    for (const e of templateIterator) {
-      yield entityize(String(valueIterator.next().value));
-      yield e.replace(/(?<=^|>)\s+(?=<|$)/g, '');
-    }
-  }());
+  return ''.concat(
+    ...(function* () {
+      const templateIterator = template[Symbol.iterator]();
+      yield templateIterator.next().value!;
+      const valueIterator = values[Symbol.iterator]();
+      for (const e of templateIterator) {
+        yield entityize(String(valueIterator.next().value));
+        yield e.replace(/(?<=^|>)\s+(?=<|$)/g, '');
+      }
+    })()
+  );
 }
 
 interface ElementOptions<N extends keyof HTMLElementTagNameMap> {
   classList?: string | string[];
   data?: Record<string, string>;
   attributes?: Record<string, string>;
-  properties?: Partial<HTMLElementTagNameMap[N]>
+  properties?: Partial<HTMLElementTagNameMap[N]>;
 }
 
 function element<N extends keyof HTMLElementTagNameMap>(
@@ -144,7 +148,7 @@ function dialog(options?: ElementOptions<'dialog'>) {
     dialog.append(element('form', {properties: {method: 'dialog'}})(...args));
     dialog.addEventListener('close', () => {
       dialog.remove();
-    })
+    });
     return dialog;
   };
 }

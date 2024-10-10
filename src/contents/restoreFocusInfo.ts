@@ -14,7 +14,7 @@ function restoreFocusInfo(root: HTMLDivElement) {
     node,
     offset:
       node?.nodeType === Node.TEXT_NODE
-        ? Math.min(offset, (node as Text).data.length) 
+        ? Math.min(offset, (node as Text).data.length)
         : 0,
   };
 }

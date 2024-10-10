@@ -31,7 +31,7 @@ function contents(root: HTMLDivElement) {
     void applyHash(root);
   });
   if (new URLSearchParams(location.search).has('open')) {
-    openDocumentDialog()
+    openDocumentDialog();
   } else {
     applyHash(root);
   }

@@ -6,7 +6,8 @@ const keyPromise = (async () => {
   if (saved) {
     return importKey(saved);
   }
-  await new Promise<void>(resolve => window.addEventListener('load', () => resolve())
+  await new Promise<void>(resolve =>
+    window.addEventListener('load', () => resolve())
   );
   const password = await passwordPrompt();
   const key = await generateKey(password);
@@ -16,7 +17,6 @@ const keyPromise = (async () => {
 
 /**
  * localStorageに保存したキーをクリアしてリロードする。
- * @returns 
  */
 function resetKey(): never {
   localStorage.removeItem('crypto-key');

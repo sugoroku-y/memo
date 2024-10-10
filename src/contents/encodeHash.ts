@@ -9,7 +9,8 @@
  */
 async function encodeHash(key: CryptoKey, source: string): Promise<string> {
   return encodeBase64(
-    await encrypt(key, 
+    await encrypt(
+      key,
       await new Response(
         new Blob([source]).stream().pipeThrough(new CompressionStream('gzip'))
       ).arrayBuffer()

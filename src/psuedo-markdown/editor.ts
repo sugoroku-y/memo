@@ -203,7 +203,8 @@ const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
     for (const row of table?.querySelectorAll('tr') ?? []) {
       // その行の先頭のセルを複製する(なければtd)
       let _localName = row.firstElementChild?.localName;
-      const localName = _localName === 'th' || _localName === 'td' ? _localName : 'td';
+      const localName =
+        _localName === 'th' || _localName === 'td' ? _localName : 'td';
       while (index >= row.querySelectorAll(`tr > th, tr > td`).length) {
         row.append(element(localName)`<br>`);
       }
@@ -493,7 +494,9 @@ async function prepareEditor(root: HTMLDivElement) {
     ev => {
       const listener =
         keymap[
-          `${ev.key.length > 1 && ev.shiftKey ? 'shift+' : ''}${ev.ctrlKey ? 'ctrl+' : ''}${ev.altKey ? 'alt+' : ''}${ev.key}`
+          `${ev.key.length > 1 && ev.shiftKey ? 'shift+' : ''}${
+            ev.ctrlKey ? 'ctrl+' : ''
+          }${ev.altKey ? 'alt+' : ''}${ev.key}`
         ];
       if (listener?.(root)) {
         ev.preventDefault();
@@ -944,7 +947,10 @@ async function prepareEditor(root: HTMLDivElement) {
   });
 }
 
-function moveLine(root: HTMLDivElement, direction: 'forward' | 'backword'): boolean {
+function moveLine(
+  root: HTMLDivElement,
+  direction: 'forward' | 'backword'
+): boolean {
   const sel = getSelection();
   if (!sel?.isCollapsed) {
     // 選択状態では無効
@@ -957,9 +963,20 @@ function moveLine(root: HTMLDivElement, direction: 'forward' | 'backword'): bool
     return false;
   }
   // リストの項目上にキャレットがあればリストの項目を移動
-  const parent = line.localName === 'li' ? line.parentElement?.closest('ul,ol') : line.parentElement !== root ? line.parentElement : undefined;
-  const navar = line[direction === 'forward' ? 'nextElementSibling' : 'previousElementSibling'];
-  const against = line[direction === 'forward' ? 'previousElementSibling' : 'nextElementSibling'];
+  const parent =
+    line.localName === 'li'
+      ? line.parentElement?.closest('ul,ol')
+      : line.parentElement !== root
+      ? line.parentElement
+      : undefined;
+  const navar =
+    line[
+      direction === 'forward' ? 'nextElementSibling' : 'previousElementSibling'
+    ];
+  const against =
+    line[
+      direction === 'forward' ? 'previousElementSibling' : 'nextElementSibling'
+    ];
   switch (navar?.localName) {
     case 'ul':
     case 'ol':
@@ -974,22 +991,28 @@ function moveLine(root: HTMLDivElement, direction: 'forward' | 'backword'): bool
       navar[direction === 'forward' ? 'prepend' : 'append'](line);
       if (against?.localName === navar.localName) {
         // 反対側の隣も同じ種類のリストなら連結
-        navar[direction === 'forward' ? 'prepend' : 'append'](...against.childNodes);
+        navar[direction === 'forward' ? 'prepend' : 'append'](
+          ...against.childNodes
+        );
         against.remove();
       }
       break;
     case undefined:
-        // 一番端の項目
+      // 一番端の項目
       if (!parent) {
         // 親がなければ何もしない
         return false;
       }
-      if (line.localName === 'li' && (!parent.parentElement || !['ul', 'ol'].includes(parent.parentElement.localName))) {
+      if (
+        line.localName === 'li' &&
+        (!parent.parentElement ||
+          !['ul', 'ol'].includes(parent.parentElement.localName))
+      ) {
         // 親の親がリストでなければdivに置き換え
         const div = document.createElement('div');
         div.append(...line.childNodes);
         line.remove();
-        line= div;
+        line = div;
       }
       // 親の隣に移動
       parent[direction === 'forward' ? 'after' : 'before'](line);
@@ -997,7 +1020,7 @@ function moveLine(root: HTMLDivElement, direction: 'forward' | 'backword'): bool
         // 親が空っぽになったら削除
         parent.remove();
       }
-    
+
       break;
     default:
       if (navar) {

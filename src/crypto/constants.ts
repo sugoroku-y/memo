@@ -1,7 +1,9 @@
 const algorithmPBKDF2 = 'PBKDF2';
 const algorithmAesGcm = 'AES-GCM';
 
-const algorithmIdPbkdf2 = {name: algorithmPBKDF2} as const satisfies AlgorithmIdentifier;
+const algorithmIdPbkdf2 = {
+  name: algorithmPBKDF2,
+} as const satisfies AlgorithmIdentifier;
 
 const usageDeriveKey = ['deriveKey'] as const satisfies KeyUsage[];
 
@@ -36,20 +38,10 @@ const aesDerivedKeyParams = {
 
 const algorismWithIv = {
   name: algorithmAesGcm,
-  iv: Uint8Array.of(
-    118,
-    189,
-    225,
-    216,
-    181,
-    156,
-    148,
-    59,
-    210,
-    99,
-    84,
-    136
-  ),
+  iv: Uint8Array.of(118, 189, 225, 216, 181, 156, 148, 59, 210, 99, 84, 136),
 } as const satisfies AesCbcParams;
 
-const usageEncryptDecrypt = ['encrypt', 'decrypt'] as const satisfies KeyUsage[];
+const usageEncryptDecrypt = [
+  'encrypt',
+  'decrypt',
+] as const satisfies KeyUsage[];
