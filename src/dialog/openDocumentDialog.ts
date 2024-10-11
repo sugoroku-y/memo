@@ -64,7 +64,7 @@ function openDocumentDialog(currentDocumentId?: string) {
           case 'another-tab':
             (async () => {
               const hash = await loadDocument(id);
-              window.open(`#${hash}`, '_blank');
+              window.open(`${location.pathname}#${hash}`, '_blank');
             })();
             break;
           case 'delete':
@@ -84,7 +84,7 @@ function openDocumentDialog(currentDocumentId?: string) {
               const hash = await loadDocument(id);
               dlg.close();
               documentId = id;
-              location.hash = `#${hash}`;
+              location.replace(`${location.pathname}#${hash}`);
             })();
             break;
         }
