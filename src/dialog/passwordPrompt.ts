@@ -11,23 +11,39 @@ declare const passwordPromptDialog: HTMLDialogElement;
  * - パスワードが5文字以上入力されていればEnterキーでもダイアログは閉じる
  * @returns {Promise<string>} 入力されたパスワード
  */
-async function passwordPrompt() {
+async function passwordPrompt({minLength = 5}: {minLength?: number} = {}) {
   const dlg = dialog({classList: 'password-prompt'})/* html */ `
-    <label>パスワード: <input type="text"/></label>
+    <label>パスワード:</label><input type="text" minLength="${minLength}"/>
     <summary>
-      URLに積む内容を暗号化するためのパスワードです<br>
-      同じパスワードを使うことで同じURLを<br>
-      別のブラウザでも表示編集できます。
+      内容をURLに積む際の暗号化に使用されるパスワードです<br>
+      同じパスワードを使うことで別のブラウザでも同じURLを<br>
+      表示および編集できます。
+    </summary>
+    <label>パスワード(確認):</label> <input type="text" minLength="${minLength}"/>
+    <summary>
+      パスワードに打ち間違いがないか確認します。<br>
+      上のパスワードと同じものを入力してください。
     </summary>
     <button>設定</button>
   `;
-  const input = dlg.querySelector('input')!;
+  const [input, input2] = dlg.querySelectorAll('input');
   const button = dlg.querySelector('button')!;
-  input.addEventListener('input', () => {
+  dlg.addEventListener('input', ev => {
+    if (ev.target !== input && ev.target !== input2) {
+      return;
+    }
     if (input.type !== 'password') {
       input.type = 'password';
+      input2.type = 'password';
+      (ev.target === input2 ? input : input2).value = '';
     }
-    button.disabled = input.value.length < 5;
+    if (input.validity.valid) {
+      input2.setCustomValidity(
+        input.value === input2.value ? '' : '確認用のパスワードが一致しません。'
+      );
+      input2.reportValidity();
+    }
+    button.disabled = !input.validity.valid || !input2.validity.valid;
   });
   dlg.addEventListener(
     'keydown',
@@ -42,7 +58,7 @@ async function passwordPrompt() {
     dlg.returnValue = input.value;
   });
   document.body.append(dlg);
-  input.value = Math.random().toString(36).slice(2);
+  input.value = input2.value = Math.random().toString(36).slice(2);
   input.select();
   dlg.showModal();
   return await new Promise<string>(resolve => {
