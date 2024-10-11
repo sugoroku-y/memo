@@ -136,6 +136,10 @@ ul > li {
   width: calc(100% - 2px);
   height: calc(100% - 2px);
   padding: 1px;
+// フォーカスがあるときの枠を非表示にする
+  &:focus-visible {
+    outline: none;
+  }
 }
 
 dialog {
