@@ -32,7 +32,7 @@ async function passwordPrompt() {
   dlg.addEventListener(
     'keydown',
     ev => {
-      if (!ev.shiftKey && !ev.altKey && !ev.ctrlKey && ev.key === 'Escape') {
+      if (ev.key === 'Escape') {
         ev.preventDefault();
       }
     },
