@@ -12,14 +12,23 @@ declare const passwordPromptDialog: HTMLDialogElement;
  * @returns {Promise<string>} 入力されたパスワード
  */
 async function passwordPrompt({minLength = 5}: {minLength?: number} = {}) {
+  const randomPassword = Math.random().toString(36).slice(2);
   const dlg = dialog({classList: 'password-prompt'})/* html */ `
-    <label>パスワード:</label><input type="text" minLength="${minLength}"/>
+    <label>パスワード:</label>
+    <input type="text"
+           required
+           minLength="${minLength}"
+           value="${randomPassword}"/>
     <summary>
       内容をURLに積む際の暗号化に使用されるパスワードです<br>
       同じパスワードを使うことで別のブラウザでも同じURLを<br>
       表示および編集できます。
     </summary>
-    <label>パスワード(確認):</label> <input type="text" minLength="${minLength}"/>
+    <label>パスワード(確認):</label>
+    <input type="password"
+           required
+           minLength="${minLength}"
+           value="${randomPassword}"/>
     <summary>
       パスワードに打ち間違いがないか確認します。<br>
       上のパスワードと同じものを入力してください。
@@ -27,40 +36,44 @@ async function passwordPrompt({minLength = 5}: {minLength?: number} = {}) {
     <button>設定</button>
   `;
   const [input, input2] = dlg.querySelectorAll('input');
-  const button = dlg.querySelector('button')!;
-  dlg.addEventListener('input', ev => {
-    if (ev.target !== input && ev.target !== input2) {
-      return;
-    }
-    if (input.type !== 'password') {
+  const customValidation = (valid: boolean) => {
+    input2.setCustomValidity(valid ? '' : '確認用のパスワードが一致しません。');
+    input2.reportValidity();
+  };
+  input.addEventListener(
+    'input',
+    () => {
+      // 入力があればパスワードフィールドに変えて確認用フィールドをクリアする
       input.type = 'password';
-      input2.type = 'password';
-      (ev.target === input2 ? input : input2).value = '';
-    }
-    if (input.validity.valid) {
-      input2.setCustomValidity(
-        input.value === input2.value ? '' : '確認用のパスワードが一致しません。'
-      );
-      input2.reportValidity();
-    }
-    button.disabled = !input.validity.valid || !input2.validity.valid;
-  });
-  dlg.addEventListener(
-    'keydown',
-    ev => {
-      if (ev.key === 'Escape') {
-        ev.preventDefault();
-      }
+      input2.value = '';
     },
-    true
+    {once: true}
   );
-  dlg.addEventListener('submit', () => {
-    dlg.returnValue = input.value;
+  input2.addEventListener('input', () => {
+    // 入力があったら一時的に確認結果を解除
+    if (input2.validity.customError) {
+      customValidation(true);
+    }
   });
-  document.body.append(dlg);
-  input.value = input2.value = Math.random().toString(36).slice(2);
+  input2.addEventListener('change', () => {
+    // 値が変更されたら再度確認
+    customValidation(input.value === input2.value);
+  });
+  // Escapeで閉じられなくする
+  dlg.addEventListener('keydown', ev => {
+    if (ev.key === 'Escape') {
+      ev.preventDefault();
+    }
+  });
+  // submitできたらパスワードを返す値に設定して閉じる
+  dlg.addEventListener('submit', () => {
+    dlg.close(input.value);
+  });
+  // ダイアログを開いたときに選択状態にする
   input.select();
+  document.body.append(dlg);
   dlg.showModal();
+  // 閉じたときの返す値を返値にする
   return await new Promise<string>(resolve => {
     dlg.addEventListener('close', () => {
       resolve(dlg.returnValue);
