@@ -48,7 +48,9 @@ function openDocumentDialog(currentDocumentId?: string) {
         selectItem(item);
       });
       item.addEventListener('blur', ev => {
-        if ((ev.relatedTarget as HTMLElement)?.closest('.list-item') !== item) {
+        // フォーカスが移る先の項目
+        const target = (ev.relatedTarget as HTMLElement)?.closest('.list-item');
+        if (target !== item) {
           // 外部にフォーカスが移ったら選択解除
           item.removeAttribute('data-selected');
           item.blur();
