@@ -82,8 +82,6 @@ function openDocumentDialog(currentDocumentId?: string) {
           default:
             (async () => {
               const hash = await loadDocument(id);
-              dlg.close();
-              documentId = id;
               location.replace(`${location.pathname}#${hash}`);
             })();
             break;
