@@ -1,5 +1,3 @@
-declare const passwordPromptDialog: HTMLDialogElement;
-
 /**
  * パスワード入力ダイアログを表示して入力されたパスワードを返す。
  *
@@ -65,18 +63,14 @@ async function passwordPrompt({minLength = 5}: {minLength?: number} = {}) {
       ev.preventDefault();
     }
   });
-  // submitできたらパスワードを返す値に設定して閉じる
-  dlg.addEventListener('submit', () => {
-    dlg.close(input.value);
-  });
   // ダイアログを開いたときに選択状態にする
   input.select();
   document.body.append(dlg);
   dlg.showModal();
-  // 閉じたときの返す値を返値にする
+  // submitできたらパスワードを返す
   return await new Promise<string>(resolve => {
-    dlg.addEventListener('close', () => {
-      resolve(dlg.returnValue);
+    dlg.addEventListener('submit', () => {
+      resolve(input.value);
     });
   });
 }
