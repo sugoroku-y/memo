@@ -144,10 +144,13 @@ function element<N extends keyof HTMLElementTagNameMap>(
   };
 }
 
-function dialog(options?: ElementOptions<'dialog'>) {
+function dialog(options?: ElementOptions<'dialog'> & {title?: string}) {
   return (...args: [TemplateStringsArray, ...unknown[]]) => {
     const dialog = element('dialog', options)``;
     dialog.append(element('form', {properties: {method: 'dialog'}})(...args));
+    if (options?.title) {
+      dialog.append(element('div', {classList: 'title'})`${options.title}`);
+    }
     dialog.addEventListener('close', () => {
       dialog.remove();
     });

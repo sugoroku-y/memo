@@ -5,13 +5,16 @@
  * まだ開いていないときは省略する。
  */
 function openDocumentDialog(currentDocumentId?: string) {
-  const dlg = dialog({classList: 'open-document'})/*html*/ `
+  const dlg = dialog({
+    classList: 'open-document',
+    title: '保存したメモを開く',
+  })/*html*/ `
     <div class="list">
       <div class="list-item-header">
         <div class="list-item-title">タイトル</div>
         <div class="list-item-last-modified">最終更新日時</div>
-</div>
-        <div class="list-item-footer">
+      </div>
+      <div class="list-item-footer">
         <button value="new" title="新しいメモ"></button>
       </div>
     </div>
@@ -21,7 +24,7 @@ function openDocumentDialog(currentDocumentId?: string) {
     }></button>
   `;
   const list = dlg.querySelector('div.list')!;
-const footer = list.lastElementChild as HTMLDivElement;
+  const footer = list.lastElementChild as HTMLDivElement;
   // ホバーでフォーカスが移動するようにしておく
   dlg.addEventListener(
     'pointerenter',
@@ -92,7 +95,7 @@ const footer = list.lastElementChild as HTMLDivElement;
         `;
       // メモを開くボタン
       const open = item.querySelector('button[value=open]')!;
-            item.addEventListener('click', ev => {
+      item.addEventListener('click', ev => {
         const button = (ev.target as HTMLElement).closest('button');
         if (!button) {
           // 項目内のボタン以外をクリックしたら開くボタンを押したことにする
@@ -125,7 +128,7 @@ const footer = list.lastElementChild as HTMLDivElement;
       });
       footer.before(item);
     }
-list.querySelector('button')?.focus();
+    list.querySelector('button')?.focus();
   })();
   /**
    * 選択項目の次を選択する

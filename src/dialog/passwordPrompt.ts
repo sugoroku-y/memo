@@ -14,7 +14,10 @@
 async function passwordPrompt(options: {minLength?: number} = {}) {
   const {minLength = 5} = options;
   const randomPassword = Math.random().toString(36).slice(2);
-  const dlg = dialog({classList: 'password-prompt'})/* html */ `
+  const dlg = dialog({
+    classList: 'password-prompt',
+    title: 'パスワードの設定',
+  })/* html */ `
     <label>パスワード:</label>
     <input type="text"
            required
