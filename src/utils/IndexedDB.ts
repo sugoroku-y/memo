@@ -1,4 +1,4 @@
-class DB<K extends IDBValidKey = IDBValidKey, T = unknown> {
+class DB {
   private dbPromise: Promise<IDBDatabase>;
 
   constructor(
@@ -104,7 +104,7 @@ class DB<K extends IDBValidKey = IDBValidKey, T = unknown> {
     });
   }
 
-  async get(storeName: string, key: K): Promise<T> {
+  async get(storeName: string, key: IDBValidKey): Promise<unknown> {
     return DB.transaction(
       await this.dbPromise,
       storeName,
@@ -115,9 +115,9 @@ class DB<K extends IDBValidKey = IDBValidKey, T = unknown> {
   private async putOrAdd(
     method: 'put' | 'add',
     storeName: string,
-    key: K,
-    data: T
-  ): Promise<K> {
+    key: IDBValidKey,
+    data: unknown
+  ): Promise<IDBValidKey> {
     return DB.transaction(
       await this.dbPromise,
       storeName,
@@ -126,14 +126,22 @@ class DB<K extends IDBValidKey = IDBValidKey, T = unknown> {
       const req = store[method](data, key);
       const value = await DB.request(req);
       await DB.commit(req.transaction);
-      return value as K;
+      return value;
     });
   }
 
-  add(storeName: string, key: K, data: T): Promise<K> {
+  add(
+    storeName: string,
+    key: IDBValidKey,
+    data: unknown
+  ): Promise<IDBValidKey> {
     return this.putOrAdd('add', storeName, key, data);
   }
-  put(storeName: string, key: K, data: T): Promise<K> {
+  put(
+    storeName: string,
+    key: IDBValidKey,
+    data: unknown
+  ): Promise<IDBValidKey> {
     return this.putOrAdd('put', storeName, key, data);
   }
 
@@ -143,44 +151,36 @@ class DB<K extends IDBValidKey = IDBValidKey, T = unknown> {
       indexName,
       query,
       direction,
+      mode,
     }: {
       indexName?: string;
       query?: IDBValidKey | IDBKeyRange | null;
       direction?: IDBCursorDirection;
+      mode?: IDBTransactionMode;
     } = {}
   ) {
     yield* DB.transaction(
       await this.dbPromise,
       storeName,
-      'readonly'
+      mode
     )(async function* ({[storeName]: store}) {
       const index = indexName ? store.index(indexName) : store;
       const req = index.openCursor(query, direction);
       for (;;) {
-        const value = await new Promise<[K, T] | undefined>(
-          (resolve, reject) => {
-            req.onsuccess = () => {
-              if (!req.result) {
-                resolve(undefined);
-              } else {
-                resolve([req.result.primaryKey as K, req.result.value]);
-                req.result.continue();
-              }
-            };
-            req.onerror = () => {
-              reject(req.error);
-            };
-          }
-        );
-        if (value === undefined) {
+        const result = await DB.request(req);
+        if (!result) {
           break;
         }
-        yield value;
+        const update = yield [result.primaryKey, result.value];
+        if (mode === 'readwrite' && update) {
+          await DB.request(result.update(update));
+        }
+        result.continue();
       }
     });
   }
 
-  async delete(storeName: string, query: K | IDBKeyRange) {
+  async delete(storeName: string, query: IDBValidKey | IDBKeyRange) {
     await DB.transaction(
       await this.dbPromise,
       storeName,
@@ -188,12 +188,48 @@ class DB<K extends IDBValidKey = IDBValidKey, T = unknown> {
     )(({[storeName]: store}) => DB.request(store.delete(query)));
   }
 
-  async count(storeName: string, query: K | IDBKeyRange) {
+  async count(storeName: string, query: IDBValidKey | IDBKeyRange) {
     return await DB.transaction(
       await this.dbPromise,
       storeName,
       'readonly'
     )(({[storeName]: store}) => DB.request(store.count(query)));
+  }
+
+  store<K extends IDBValidKey = IDBValidKey, T = unknown>(storeName: string) {
+    const db = this;
+    return {
+      async get(key: K) {
+        const value = await db.get(storeName, key);
+        return value as T;
+      },
+      async add(key: K, data: T) {
+        const newKey = await db.add(storeName, key, data);
+        return newKey as K;
+      },
+      async put(key: K, data: T) {
+        const newKey = await db.put(storeName, key, data);
+        return newKey as K;
+      },
+      records(options?: {
+        indexName?: string;
+        query?: IDBValidKey | IDBKeyRange | null;
+        direction?: IDBCursorDirection;
+        mode?: IDBTransactionMode;
+      }) {
+        return db.records(storeName, options) as AsyncGenerator<
+          [K, T],
+          void,
+          unknown
+        >;
+      },
+      delete(key: K) {
+        return db.delete(storeName, key);
+      },
+      count(query: IDBValidKey | IDBKeyRange) {
+        return db.count(storeName, query);
+      },
+    };
   }
 }
 
@@ -203,16 +239,17 @@ interface Memo {
   lastModified: Date;
 }
 
-const memoDB = new DB<string, Memo>('memo', {
+const memoDB = new DB('memo', {
   memo: {indices: {lastModified: {}}},
 });
+const memoTable = memoDB.store<string, Memo>('memo');
 
 async function saveDocument(documentId: string, hash: string) {
-  const data = await memoDB.get('memo', documentId).catch(() => undefined);
+  const data = await memoTable.get(documentId).catch(() => undefined);
   if (data?.hash === hash) {
     return;
   }
-  await memoDB.put('memo', documentId, {
+  await memoTable.put(documentId, {
     title: document.title,
     hash,
     lastModified: new Date(),
@@ -220,14 +257,15 @@ async function saveDocument(documentId: string, hash: string) {
 }
 
 async function loadDocument(documentId: string): Promise<string> {
-  const {hash} = await memoDB.get('memo', documentId);
+  const {hash} = await memoTable.get(documentId);
+  await decodeHash(await keyPromise, hash);
   return hash;
 }
 
 async function* listDocuments() {
-  yield* memoDB.records('memo', {indexName: 'lastModified', direction: 'prev'});
+  yield* memoTable.records({indexName: 'lastModified', direction: 'prev'});
 }
 
 async function deleteDocument(documentId: string) {
-  await memoDB.delete('memo', documentId);
+  await memoTable.delete(documentId);
 }
