@@ -27,36 +27,36 @@ class DB {
         for (const [storeName, {indices, ...storeOptions}] of Object.entries(
           stores
         )) {
-          if (!db.objectStoreNames.contains(storeName)) {
-            const store = db.createObjectStore(storeName, storeOptions);
-            if (indices) {
-              for (const indexName of store.indexNames) {
-                if (indexName in indices) {
+          const store = db.objectStoreNames.contains(storeName)
+            ? req.transaction!.objectStore(storeName)
+            : db.createObjectStore(storeName, storeOptions);
+          if (indices) {
+            for (const indexName of store.indexNames) {
+              if (indexName in indices) {
+                continue;
+              }
+              store.deleteIndex(indexName);
+            }
+            for (const [
+              indexName,
+              {keyPath = indexName, ...indexOptions},
+            ] of Object.entries(indices)) {
+              if (store.indexNames.contains(indexName)) {
+                const index = store.index(indexName);
+                if (
+                  !index.unique === !indexOptions.unique &&
+                  !index.multiEntry === !indexOptions.multiEntry &&
+                  (typeof keyPath === 'string'
+                    ? index.keyPath === keyPath
+                    : Array.isArray(index.keyPath) &&
+                      keyPath.length === index.keyPath.length &&
+                      keyPath.every((k, i) => index.keyPath[i] === k))
+                ) {
                   continue;
                 }
                 store.deleteIndex(indexName);
               }
-              for (const [
-                indexName,
-                {keyPath = indexName, ...indexOptions},
-              ] of Object.entries(indices)) {
-                if (store.indexNames.contains(indexName)) {
-                  const index = store.index(indexName);
-                  if (
-                    !index.unique === !indexOptions.unique &&
-                    !index.multiEntry === !indexOptions.multiEntry &&
-                    (typeof keyPath === 'string'
-                      ? index.keyPath === keyPath
-                      : Array.isArray(index.keyPath) &&
-                        keyPath.length === index.keyPath.length &&
-                        keyPath.every((k, i) => index.keyPath[i] === k))
-                  ) {
-                    continue;
-                  }
-                  store.deleteIndex(indexName);
-                }
-                store.createIndex(indexName, keyPath, indexOptions);
-              }
+              store.createIndex(indexName, keyPath, indexOptions);
             }
           }
         }
@@ -304,8 +304,11 @@ async function loadDocument(documentId: string): Promise<string> {
   return hash;
 }
 
-async function* listDocuments() {
-  yield* memoTable.records({indexName: 'lastModified', direction: 'prev'});
+async function* listDocuments(
+  indexName: 'lastModified' | 'title' | 'size',
+  direction: 'prev' | 'next'
+) {
+  yield* memoTable.records({indexName, direction});
 }
 
 async function deleteDocument(documentId: string) {

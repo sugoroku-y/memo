@@ -123,9 +123,41 @@ dialog.open-document {
       background-color: #afe7f8;
       padding-top: 4px;
       padding-bottom: 2px;
+      &::after {
+        content: '▼';
+      }
+    }
+    &[data-direction="next"] {
+      div.list-item-title,
+      div.list-item-size,
+      div.list-item-last-modified {
+        &::after {
+          content: '▲';
+        }
+      }
+    }
+    &:not([data-column="title"]) {
+      div.list-item-title::after {
+        content: '';
+      }
+    }
+    &:not([data-column="size"]) {
+      div.list-item-size::after {
+        content: '';
+      }
+    }
+    &[data-column="title"],
+    &[data-column="size"] {
+      div.list-item-last-modified::after {
+        content: '';
+      }
     }
     div.list-item-last-modified {
       flex-basis: 10em + 2.4em * 3;
+    }
+    div.list-item-last-modified
+    &[data-direction="next"] div.list-item-last-modified::after {
+      content: '';
     }
   }
 

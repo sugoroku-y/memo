@@ -5,6 +5,13 @@
  * まだ開いていないときは省略する。
  */
 function openDocumentDialog(currentDocumentId?: string) {
+  const sortOrder: {
+    column: 'title' | 'size' | 'lastModified';
+    direction: 'prev' | 'next';
+  } = {
+    column: 'lastModified',
+    direction: 'prev',
+  };
   const dlg = dialog({
     classList: 'open-document',
     title: '保存したメモを開く',
@@ -25,6 +32,46 @@ function openDocumentDialog(currentDocumentId?: string) {
     }></button>
   `;
   const list = dlg.querySelector('div.list')!;
+  const header = list.firstElementChild as HTMLDivElement;
+  header.addEventListener('click', ev => {
+    const classname = (
+      ['list-item-title', 'list-item-size', 'list-item-last-modified'] as const
+    ).find(token => (ev.target as HTMLElement).classList.contains(token));
+    if (!classname) {
+      return;
+    }
+    sortOrder.column = (
+      {
+        'list-item-title': 'title',
+        'list-item-size': 'size',
+        'list-item-last-modified': 'lastModified',
+      } as const
+    )[classname];
+    if (
+      header.getAttribute('data-column') === sortOrder.column ||
+      (sortOrder.column === 'lastModified' &&
+        !header.hasAttribute('data-column'))
+    ) {
+      if (header.getAttribute('data-direction') === 'next') {
+        header.removeAttribute('data-direction');
+        sortOrder.direction = 'prev';
+      } else {
+        header.setAttribute('data-direction', 'next');
+        sortOrder.direction = 'next';
+      }
+    } else {
+      header.setAttribute('data-column', sortOrder.column);
+      if (sortOrder.column === 'title') {
+        // タイトルだけは昇順をデフォルトとする
+        header.setAttribute('data-direction', 'next');
+        sortOrder.direction = 'next';
+      } else {
+        header.removeAttribute('data-direction');
+        sortOrder.direction = 'prev';
+      }
+    }
+    reloadList();
+  });
   const footer = list.lastElementChild as HTMLDivElement;
   // ホバーでフォーカスが移動するようにしておく
   dlg.addEventListener(
@@ -76,8 +123,14 @@ function openDocumentDialog(currentDocumentId?: string) {
     },
     true
   );
-  (async () => {
-    for await (const [id, {title, lastModified, size}] of listDocuments()) {
+  async function reloadList() {
+    for (const item of list.querySelectorAll('div.list-item')) {
+      item.remove();
+    }
+    for await (const [id, {title, lastModified, size}] of listDocuments(
+      sortOrder.column,
+      sortOrder.direction
+    )) {
       if (id === currentDocumentId) {
         // 開いているメモはリストから除外
         continue;
@@ -134,7 +187,8 @@ function openDocumentDialog(currentDocumentId?: string) {
       footer.before(item);
     }
     list.querySelector('button')?.focus();
-  })();
+  }
+  reloadList();
   /**
    * 選択項目の次を選択する
    * @param direction 次の方向を指定する
