@@ -57,7 +57,7 @@ dialog.open-document {
           left: 1.1em;
         }
       }
-            button[name='open'] {
+      button[name='open'] {
         &::after {
           content: '▶';
         }
@@ -123,11 +123,13 @@ dialog.open-document {
       background-color: #afe7f8;
       padding-top: 4px;
       padding-bottom: 2px;
+      justify-content: center;
+      user-select: none;
       &::after {
         content: '▼';
       }
     }
-    &[data-direction="next"] {
+    &[data-direction='next'] {
       div.list-item-title,
       div.list-item-size,
       div.list-item-last-modified {
@@ -136,18 +138,18 @@ dialog.open-document {
         }
       }
     }
-    &:not([data-column="title"]) {
+    &:not([data-column='title']) {
       div.list-item-title::after {
         content: '';
       }
     }
-    &:not([data-column="size"]) {
+    &:not([data-column='size']) {
       div.list-item-size::after {
         content: '';
       }
     }
-    &[data-column="title"],
-    &[data-column="size"] {
+    &[data-column='title'],
+    &[data-column='size'] {
       div.list-item-last-modified::after {
         content: '';
       }
@@ -156,7 +158,8 @@ dialog.open-document {
       flex-basis: 10em + 2.4em * 3;
     }
     div.list-item-last-modified
-    &[data-direction="next"] div.list-item-last-modified::after {
+      &[data-direction='next']
+      div.list-item-last-modified::after {
       content: '';
     }
   }
