@@ -173,15 +173,12 @@ function openDocumentDialog(currentDocumentId?: string) {
       case 'open':
         // 選択したメモを開く
         (async () => {
-          const hash = await loadDocument(submitter.id);
-          documentId = undefined;
-          location.replace(`${location.pathname}#${hash}`);
+          openHash(await loadDocument(submitter.id));
         })();
         return;
       case 'new':
         // 新しいメモを開く
-        documentId = undefined;
-        location.replace(location.pathname);
+        openHash();
         return;
     }
   });

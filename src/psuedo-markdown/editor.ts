@@ -1051,3 +1051,9 @@ function copyLine(direction: 'forward' | 'backword'): boolean {
   sel.setPosition(focusNode, focusOffset);
   return true;
 }
+
+function openHash(hash?: string) {
+  const url = hash ? `${location.pathname}#${hash}` : location.pathname;
+  documentId = undefined;
+  location.replace(url);
+}

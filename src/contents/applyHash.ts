@@ -13,9 +13,11 @@ async function applyHash(root: HTMLDivElement) {
           .slice(1, -1)
       );
       if (answer) {
+        // パスワードをリセットしてリロード
         resetKey();
       }
-      location.replace(location.pathname);
+      // 新しいメモを開く
+      openHash();
     }));
   if (decoded) {
     root.innerHTML = decoded;
