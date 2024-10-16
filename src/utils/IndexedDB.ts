@@ -145,6 +145,35 @@ class DB {
     return this.putOrAdd('put', storeName, key, data);
   }
 
+  async *keys(
+    storeName: string,
+    {
+      indexName,
+      query,
+      direction,
+    }: {
+      indexName?: string;
+      query?: IDBValidKey | IDBKeyRange | null;
+      direction?: IDBCursorDirection;
+    } = {}
+  ) {
+    yield* DB.transaction(
+      await this.dbPromise,
+      storeName
+    )(async function* ({[storeName]: store}) {
+      const index = indexName ? store.index(indexName) : store;
+      const req = index.openKeyCursor(query, direction);
+      for (;;) {
+        const result = await DB.request(req);
+        if (!result) {
+          break;
+        }
+        yield result.primaryKey;
+        result.continue();
+      }
+    });
+  }
+
   async *records(
     storeName: string,
     {
@@ -210,6 +239,13 @@ class DB {
       async put(key: K, data: T) {
         const newKey = await db.put(storeName, key, data);
         return newKey as K;
+      },
+      keys(options?: {
+        indexName?: string;
+        query?: IDBValidKey | IDBKeyRange | null;
+        direction?: IDBCursorDirection;
+      }) {
+        return db.keys(storeName, options) as AsyncGenerator<K, void, unknown>;
       },
       records(options?: {
         indexName?: string;
