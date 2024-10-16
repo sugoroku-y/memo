@@ -83,6 +83,7 @@ dialog.open-document {
     }
   }
   .list-item-title,
+  .list-item-size,
   .list-item-last-modified,
   .list-item-buttons {
     display: flex;
@@ -100,6 +101,12 @@ dialog.open-document {
     border-right: solid 1px #c0c0c0;
     padding-left: 3px;
   }
+  div.list-item-size {
+    flex-basis: 5em;
+    border-right: solid 1px #c0c0c0;
+    padding-right: 3px;
+    justify-content: flex-end;
+  }
   div.list-item-last-modified {
     flex-basis: 10em;
     padding-left: 3px;
@@ -110,6 +117,7 @@ dialog.open-document {
   }
   div.list-item-header {
     div.list-item-title,
+    div.list-item-size,
     div.list-item-last-modified {
       font-weight: bold;
       background-color: #afe7f8;
@@ -147,7 +155,7 @@ dialog.open-document {
       outline: none;
     }
   }
-  button[value="new"] {
+  button[value='new'] {
     margin-left: 5px;
     width: 8em;
     margin: 0 auto;
@@ -161,7 +169,7 @@ dialog.open-document {
       content: '➕新しいメモ';
     }
   }
-  button[value="cancel"] {
+  button[value='cancel'] {
     width: 2.4em;
     height: 2.4em;
     position: absolute;

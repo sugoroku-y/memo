@@ -12,6 +12,7 @@ function openDocumentDialog(currentDocumentId?: string) {
     <div class="list">
       <div class="list-item-header">
         <div class="list-item-title">タイトル</div>
+        <div class="list-item-size">サイズ</div>
         <div class="list-item-last-modified">最終更新日時</div>
       </div>
       <div class="list-item-footer">
@@ -76,13 +77,17 @@ function openDocumentDialog(currentDocumentId?: string) {
     true
   );
   (async () => {
-    for await (const [id, {title, lastModified}] of listDocuments()) {
+    for await (const [id, {title, lastModified, size}] of listDocuments()) {
       if (id === currentDocumentId) {
         // 開いているメモはリストから除外
         continue;
       }
       const item = element('div', {classList: 'list-item'})/* html */ `
           <div class="list-item-title" title="${title}">${title}</div>
+          <div class="list-item-size">${
+            // メモのサイズ(圧縮・暗号化後)
+            size ? String(size).replace(/(?<=\d)(?:=(?:\d{3})+$)/g, ',') : '-'
+          }</div>
           <div class="list-item-last-modified">${
             // 最終更新日時
             formatDate('YYYY-MM-DD hh:mm', lastModified)

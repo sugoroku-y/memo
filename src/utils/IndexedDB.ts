@@ -272,12 +272,17 @@ class DB {
 interface Memo {
   title: string;
   hash: string;
+  size: number;
   lastModified: Date;
 }
 
-const memoDB = new DB('memo', {
-  memo: {indices: {lastModified: {}}},
-});
+const memoDB = new DB(
+  'memo',
+  {
+    memo: {indices: {lastModified: {}, title: {}, size: {}}},
+  },
+  2
+);
 const memoTable = memoDB.store<string, Memo>('memo');
 
 async function saveDocument(documentId: string, hash: string) {
@@ -288,6 +293,7 @@ async function saveDocument(documentId: string, hash: string) {
   await memoTable.put(documentId, {
     title: document.title,
     hash,
+    size: hash.length,
     lastModified: new Date(),
   });
 }
