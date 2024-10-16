@@ -300,7 +300,6 @@ async function saveDocument(documentId: string, hash: string) {
 
 async function loadDocument(documentId: string): Promise<string> {
   const {hash} = await memoTable.get(documentId);
-  await decodeHash(await keyPromise, hash);
   return hash;
 }
 

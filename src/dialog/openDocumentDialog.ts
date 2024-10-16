@@ -146,26 +146,38 @@ function openDocumentDialog(currentDocumentId?: string) {
             formatDate('YYYY-MM-DD hh:mm', lastModified)
           }</div>
           <div class="list-item-buttons">
-            <button value="open" id="${id}" title="開く" autofocus></button>
+            <button type="button" name="open" title="開く" autofocus></button>
             <button type="button" name="another-tab" title="別タブで開く"></button>
             <button type="button" name="delete" title="削除"></button>
           </div>
         `;
-      // メモを開くボタン
-      const open = item.querySelector('button[value=open]')!;
+      const load = async () => {
+        const hash = await loadDocument(id);
+        try {
+          // デコード可能か確認する
+          await decodeHash(await keyPromise, hash);
+        } catch {
+          // 復号に失敗したら確認してから削除
+          if (
+            await confirmDialog('復号に失敗しました。このメモを削除しますか?')
+          ) {
+            deleteDocument(id);
+            item.remove();
+          }
+          return undefined;
+        }
+        return hash;
+      };
       item.addEventListener('click', ev => {
         const button = (ev.target as HTMLElement).closest('button');
-        if (!button) {
-          // 項目内のボタン以外をクリックしたら開くボタンを押したことにする
-          open.click();
-          return;
-        }
-        switch (button.name) {
+        switch (button?.name) {
           case 'another-tab':
             (async () => {
               // 別タブで開く
-              const hash = await loadDocument(id);
-              window.open(`${location.pathname}#${hash}`, '_blank');
+              const hash = await load();
+              if (hash) {
+                window.open(`${location.pathname}#${hash}`, '_blank');
+              }
             })();
             break;
           case 'delete':
@@ -182,6 +194,16 @@ function openDocumentDialog(currentDocumentId?: string) {
               item.remove();
             })();
             break;
+          default:
+            // 項目内のボタン以外をクリックしても開くボタンを押したことにして選択したメモを開く
+            (async () => {
+              const hash = await load();
+              if (hash) {
+                openHash(hash);
+                dlg.close();
+              }
+            })();
+            return;
         }
       });
       footer.before(item);
@@ -226,20 +248,13 @@ function openDocumentDialog(currentDocumentId?: string) {
         return;
     }
   });
-  dlg.addEventListener('submit', ev => {
-    const submitter = ev.submitter?.closest('button');
-    switch (submitter?.value) {
-      case 'open':
-        // 選択したメモを開く
-        (async () => {
-          openHash(await loadDocument(submitter.id));
-        })();
-        return;
-      case 'new':
-        // 新しいメモを開く
-        openHash();
-        return;
+  dlg.addEventListener('close', ev => {
+    if (dlg.returnValue !== 'new') {
+      // 新しいメモを開くボタン以外のsubmitは何もしないで閉じる
+      return;
     }
+    // 新しいメモを開く
+    openHash();
   });
   if (!currentDocumentId) {
     // メモを開いていない状態のときはEscapeキーで閉じないようにする

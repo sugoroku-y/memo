@@ -57,7 +57,7 @@ dialog.open-document {
           left: 1.1em;
         }
       }
-      button[value='open'] {
+            button[name='open'] {
         &::after {
           content: '▶';
         }
