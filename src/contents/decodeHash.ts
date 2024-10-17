@@ -7,7 +7,7 @@
  * 4. バイナリ -> 文字列(utf8)
  * @param {string} encoded gzip展開する文字列
  */
-async function decodeHash(key: CryptoKey, encoded: string) {
+async function decodeHash(key: CryptoKey | CryptoKeyPair, encoded: string) {
   return await new Response(
     new Blob([await decrypt(key, decodeBase64(encoded))])
       .stream()

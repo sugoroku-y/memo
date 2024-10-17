@@ -402,3 +402,25 @@ async function* listDocuments(
 async function deleteDocument(documentId: string) {
   await memoTable.delete(documentId);
 }
+
+/**
+ * 各メモごとに暗号化のかけ直し
+ * @param oldKey 以前暗号化に使用されていた暗号化共通鍵/公開鍵
+ * @param keyPair 新しい暗号化公開鍵
+ */
+async function migration(
+  oldKey: CryptoKey | CryptoKeyPair,
+  keyPair: CryptoKeyPair
+) {
+  // memoDB.recordsでやるとなぜかdecodeHash内でtransactionが終了して失敗してしまうのでidを先に取得
+  const indices: string[] = [];
+  for await (const id of memoTable.keys()) {
+    indices.push(id);
+  }
+  for (const id of indices) {
+    const data = await memoTable.get(id);
+    const source = await decodeHash(oldKey, data.hash);
+    const hash = await encodeHash(keyPair, source);
+    await memoTable.put(id, {...data, hash});
+  }
+}

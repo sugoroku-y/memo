@@ -41,6 +41,20 @@ const algorithmWithIv = {
   iv: Uint8Array.of(118, 189, 225, 216, 181, 156, 148, 59, 210, 99, 84, 136),
 } as const satisfies AesCbcParams;
 
+const algorithmRsaOaep = 'RSA-OAEP';
+
+const formatForPrivate = 'pkcs8';
+const formatForPublic = 'spki';
+
+const hashSha256 = 'SHA-256';
+
+const algorithmRsaHashedKeyGen = {
+  name: algorithmRsaOaep,
+  modulusLength: 2048,
+  publicExponent: new Uint8Array([1, 0, 1]),
+  hash: hashSha256,
+} satisfies RsaHashedKeyGenParams;
+
 const usageEncryptDecrypt = [
   'encrypt',
   'decrypt',

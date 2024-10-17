@@ -15,3 +15,11 @@ async function generateKey(password: string) {
     usageEncryptDecrypt
   );
 }
+
+function generateKeyPair(): Promise<CryptoKeyPair> {
+  return crypto.subtle.generateKey(
+    algorithmRsaHashedKeyGen,
+    true,
+    usageEncryptDecrypt
+  );
+}

@@ -7,7 +7,7 @@
  * 4. バイナリ -> Base64
  * @param {string} source encodeする文字列
  */
-async function encodeHash(key: CryptoKey, source: string): Promise<string> {
+async function encodeHash(key: CryptoKey | CryptoKeyPair, source: string): Promise<string> {
   return encodeBase64(
     await encrypt(
       key,
