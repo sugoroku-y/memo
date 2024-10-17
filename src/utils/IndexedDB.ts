@@ -1,3 +1,26 @@
+interface KeysOptions {
+  indexName?: string;
+  query?: IDBValidKey | IDBKeyRange | null;
+  direction?: IDBCursorDirection;
+}
+
+interface RecordsOptions extends KeysOptions {
+  mode?: IDBTransactionMode;
+}
+
+interface Store<K extends IDBValidKey = IDBValidKey, T = unknown> {
+  get(key: K): Promise<T>;
+  add(key: K, data: T): Promise<K>;
+  put(key: K, data: T): Promise<K>;
+  keys(options?: KeysOptions): AsyncGenerator<K, void, unknown>;
+  records(
+    options?: RecordsOptions & {mode: 'readwrite'}
+  ): AsyncGenerator<[K, T], void, unknown> & {update(value: T): void};
+  records(options?: RecordsOptions): AsyncGenerator<[K, T], void, unknown>;
+  delete(key: K): Promise<void>;
+  count(query: IDBValidKey | IDBKeyRange): Promise<number>;
+}
+
 class DB {
   private dbPromise: Promise<IDBDatabase>;
 
@@ -68,23 +91,90 @@ class DB {
     db: IDBDatabase,
     _storeNames: string | string[],
     mode?: IDBTransactionMode
-  ): <T>(proc: (stores: Record<string, IDBObjectStore>) => T) => T {
+  ): {
+    <T>(
+      proc: (stores: Record<string, IDBObjectStore>) => Promise<T>
+    ): Promise<T>;
+    <T>(
+      proc: (
+        stores: Record<string, IDBObjectStore>
+      ) => AsyncGenerator<T, void, unknown>
+    ): AsyncGenerator<T, void, unknown>;
+  } {
     const storeNames = Array.isArray(_storeNames) ? _storeNames : [_storeNames];
-    return proc => {
+    return (proc => {
+      let state = '';
       const transacion = db.transaction(storeNames, mode);
-      try {
-        const stores = Object.fromEntries(
-          storeNames.map(storeName => [
-            storeName,
-            transacion.objectStore(storeName),
-          ])
-        );
-        return proc(stores);
-      } catch (ex) {
-        transacion.abort();
+      transacion.addEventListener('complete', () => {
+        state = 'completed';
+      });
+      transacion.addEventListener('abort', () => {
+        state = 'aborted';
+      });
+      const teardown = async () => {
+        switch (state) {
+          case 'needCommit':
+            await new Promise<void>((resolve, reject) => {
+              transacion.addEventListener('complete', () => resolve());
+              transacion.addEventListener('error', () =>
+                reject(transacion.error)
+              );
+              transacion.commit();
+            });
+            break;
+          case 'needAbort':
+            await new Promise<void>((resolve, reject) => {
+              transacion.addEventListener('abort', () => resolve());
+              transacion.addEventListener('error', () =>
+                reject(transacion.error)
+              );
+              transacion.abort();
+            });
+            break;
+        }
+      };
+      const requestCommit = () => {
+        if (!state) {
+          state = 'needCommit';
+        }
+      };
+      const requestAbort = (ex: unknown) => {
+        if (!state) {
+          state = 'needAbort';
+        }
         throw ex;
+      };
+      const stores = Object.fromEntries(
+        storeNames.map(storeName => [
+          storeName,
+          transacion.objectStore(storeName),
+        ])
+      );
+      const r = proc(stores);
+      if ('then' in r) {
+        return (async () => {
+          try {
+            const rr = await r;
+            requestCommit();
+            return rr;
+          } catch (ex) {
+            requestAbort(ex);
+          } finally {
+            await teardown();
+          }
+        })();
       }
-    };
+      return (async function* () {
+        try {
+          yield* r;
+          requestCommit();
+        } catch (ex) {
+          requestAbort(ex);
+        } finally {
+          await teardown();
+        }
+      })();
+    }) as ReturnType<typeof this.transaction>;
   }
   private static request<T>(req: IDBRequest<T>) {
     return new Promise<T>((resolve, reject) => {
@@ -147,15 +237,7 @@ class DB {
 
   async *keys(
     storeName: string,
-    {
-      indexName,
-      query,
-      direction,
-    }: {
-      indexName?: string;
-      query?: IDBValidKey | IDBKeyRange | null;
-      direction?: IDBCursorDirection;
-    } = {}
+    {indexName, query, direction}: KeysOptions = {}
   ) {
     yield* DB.transaction(
       await this.dbPromise,
@@ -173,40 +255,50 @@ class DB {
       }
     });
   }
-
-  async *records(
+  records(
     storeName: string,
-    {
-      indexName,
-      query,
-      direction,
-      mode,
-    }: {
-      indexName?: string;
-      query?: IDBValidKey | IDBKeyRange | null;
-      direction?: IDBCursorDirection;
-      mode?: IDBTransactionMode;
-    } = {}
+    options: RecordsOptions & {mode: 'readwrite'}
+  ): AsyncGenerator<unknown, void, unknown> & {update(value: unknown): void};
+  records(
+    storeName: string,
+    options?: RecordsOptions
+  ): AsyncGenerator<unknown, void, unknown>;
+  records(
+    storeName: string,
+    {indexName, query, direction, mode}: RecordsOptions = {}
   ) {
-    yield* DB.transaction(
-      await this.dbPromise,
-      storeName,
-      mode
-    )(async function* ({[storeName]: store}) {
-      const index = indexName ? store.index(indexName) : store;
-      const req = index.openCursor(query, direction);
-      for (;;) {
-        const result = await DB.request(req);
-        if (!result) {
-          break;
-        }
-        const update = yield [result.primaryKey, result.value];
-        if (mode === 'readwrite' && update) {
-          await DB.request(result.update(update));
-        }
-        result.continue();
+    const noChange = {};
+    let newValue: unknown;
+    const dbPromise = this.dbPromise;
+    return Object.assign(
+      (async function* () {
+        yield* DB.transaction(
+          await dbPromise,
+          storeName,
+          mode
+        )(async function* ({[storeName]: store}) {
+          const index = indexName ? store.index(indexName) : store;
+          const req = index.openCursor(query, direction);
+          for (;;) {
+            const result = await DB.request(req);
+            if (!result) {
+              break;
+            }
+            newValue = noChange;
+            yield [result.primaryKey, result.value];
+            if (mode === 'readwrite' && newValue !== noChange) {
+              await DB.request(result.update(newValue));
+            }
+            result.continue();
+          }
+        });
+      })(),
+      {
+        update(value: unknown) {
+          newValue = value;
+        },
       }
-    });
+    );
   }
 
   async delete(storeName: string, query: IDBValidKey | IDBKeyRange) {
@@ -225,7 +317,9 @@ class DB {
     )(({[storeName]: store}) => DB.request(store.count(query)));
   }
 
-  store<K extends IDBValidKey = IDBValidKey, T = unknown>(storeName: string) {
+  store<K extends IDBValidKey = IDBValidKey, T = unknown>(
+    storeName: string
+  ): Store<K, T> {
     const db = this;
     return {
       async get(key: K) {
@@ -247,17 +341,12 @@ class DB {
       }) {
         return db.keys(storeName, options) as AsyncGenerator<K, void, unknown>;
       },
-      records(options?: {
-        indexName?: string;
-        query?: IDBValidKey | IDBKeyRange | null;
-        direction?: IDBCursorDirection;
-        mode?: IDBTransactionMode;
-      }) {
+      records(options?: RecordsOptions) {
         return db.records(storeName, options) as AsyncGenerator<
           [K, T],
           void,
           unknown
-        >;
+        > & {update(value: T): void};
       },
       delete(key: K) {
         return db.delete(storeName, key);
