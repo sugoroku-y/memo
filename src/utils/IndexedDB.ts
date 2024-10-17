@@ -8,6 +8,19 @@ interface RecordsOptions extends KeysOptions {
   mode?: IDBTransactionMode;
 }
 
+type AsyncGeneratorForReadonly<
+  K extends IDBValidKey = IDBValidKey,
+  T = unknown
+> = AsyncGenerator<readonly [K, T], void, unknown>;
+interface AsyncGeneratorForUpdate<
+  K extends IDBValidKey = IDBValidKey,
+  T = unknown
+> extends AsyncGeneratorForReadonly<K, T> {
+  update(value: T): void;
+  delete(): void;
+  revert(): void;
+}
+
 interface Store<K extends IDBValidKey = IDBValidKey, T = unknown> {
   get(key: K): Promise<T>;
   add(key: K, data: T): Promise<K>;
@@ -15,8 +28,8 @@ interface Store<K extends IDBValidKey = IDBValidKey, T = unknown> {
   keys(options?: KeysOptions): AsyncGenerator<K, void, unknown>;
   records(
     options?: RecordsOptions & {mode: 'readwrite'}
-  ): AsyncGenerator<[K, T], void, unknown> & {update(value: T): void};
-  records(options?: RecordsOptions): AsyncGenerator<[K, T], void, unknown>;
+  ): AsyncGeneratorForUpdate<K, T>;
+  records(options?: RecordsOptions): AsyncGeneratorForReadonly<K, T>;
   delete(key: K): Promise<void>;
   count(query: IDBValidKey | IDBKeyRange): Promise<number>;
 }
@@ -39,13 +52,14 @@ class DB {
   ) {
     this.dbPromise = new Promise<IDBDatabase>((resolve, reject) => {
       const req = indexedDB.open(dbName, version);
-      req.onsuccess = () => {
+
+      DB.addEventListener(req, 'success', () => {
         resolve(req.result);
-      };
-      req.onerror = ev => {
+      });
+      DB.addEventListener(req, 'error', ev => {
         reject(ev);
-      };
-      req.onupgradeneeded = () => {
+      });
+      DB.addEventListener(req, 'upgradeneeded', () => {
         const db = req.result;
         for (const [storeName, {indices, ...storeOptions}] of Object.entries(
           stores
@@ -83,8 +97,31 @@ class DB {
             }
           }
         }
-      };
+      });
     });
+  }
+
+  private static addEventListener<E extends keyof IDBTransactionEventMap>(
+    request: IDBTransaction,
+    type: E,
+    listener: (e: IDBTransactionEventMap[E]) => void
+  ): void;
+  private static addEventListener<E extends keyof IDBOpenDBRequestEventMap>(
+    request: IDBOpenDBRequest,
+    type: E,
+    listener: (e: IDBOpenDBRequestEventMap[E]) => void
+  ): void;
+  private static addEventListener<E extends keyof IDBRequestEventMap>(
+    request: IDBRequest,
+    type: E,
+    listener: (e: IDBRequestEventMap[E]) => void
+  ): void;
+  private static addEventListener(
+    request: EventTarget,
+    type: string,
+    listener: EventListener
+  ) {
+    request.addEventListener(type, listener, {once: true});
   }
 
   private static transaction(
@@ -105,18 +142,18 @@ class DB {
     return (proc => {
       let state = '';
       const transacion = db.transaction(storeNames, mode);
-      transacion.addEventListener('complete', () => {
+      DB.addEventListener(transacion, 'complete', () => {
         state = 'completed';
       });
-      transacion.addEventListener('abort', () => {
+      DB.addEventListener(transacion, 'abort', () => {
         state = 'aborted';
       });
       const teardown = async () => {
         switch (state) {
           case 'needCommit':
             await new Promise<void>((resolve, reject) => {
-              transacion.addEventListener('complete', () => resolve());
-              transacion.addEventListener('error', () =>
+              DB.addEventListener(transacion, 'complete', () => resolve());
+              DB.addEventListener(transacion, 'error', () =>
                 reject(transacion.error)
               );
               transacion.commit();
@@ -124,8 +161,8 @@ class DB {
             break;
           case 'needAbort':
             await new Promise<void>((resolve, reject) => {
-              transacion.addEventListener('abort', () => resolve());
-              transacion.addEventListener('error', () =>
+              DB.addEventListener(transacion, 'abort', () => resolve());
+              DB.addEventListener(transacion, 'error', () =>
                 reject(transacion.error)
               );
               transacion.abort();
@@ -178,8 +215,8 @@ class DB {
   }
   private static request<T>(req: IDBRequest<T>) {
     return new Promise<T>((resolve, reject) => {
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
+      DB.addEventListener(req, 'success', () => resolve(req.result));
+      DB.addEventListener(req, 'error', () => reject(req.error));
     });
   }
   private static commit(t: IDBTransaction | null) {
@@ -188,8 +225,8 @@ class DB {
         reject(new Error('IllegalStateError'));
         return;
       }
-      t.oncomplete = () => resolve();
-      t.onerror = () => reject(t.error);
+      DB.addEventListener(t, 'complete', () => resolve());
+      DB.addEventListener(t, 'error', () => reject(t.error));
       t.commit();
     });
   }
@@ -258,16 +295,17 @@ class DB {
   records(
     storeName: string,
     options: RecordsOptions & {mode: 'readwrite'}
-  ): AsyncGenerator<unknown, void, unknown> & {update(value: unknown): void};
+  ): AsyncGeneratorForUpdate;
   records(
     storeName: string,
     options?: RecordsOptions
-  ): AsyncGenerator<unknown, void, unknown>;
+  ): AsyncGeneratorForReadonly;
   records(
     storeName: string,
     {indexName, query, direction, mode}: RecordsOptions = {}
-  ) {
+  ): AsyncGeneratorForUpdate {
     const noChange = {};
+    const requestDelete = {};
     let newValue: unknown;
     const dbPromise = this.dbPromise;
     return Object.assign(
@@ -276,7 +314,7 @@ class DB {
           await dbPromise,
           storeName,
           mode
-        )(async function* ({[storeName]: store}) {
+        )(async function* ({[storeName]: store}): AsyncGeneratorForReadonly {
           const index = indexName ? store.index(indexName) : store;
           const req = index.openCursor(query, direction);
           for (;;) {
@@ -286,8 +324,17 @@ class DB {
             }
             newValue = noChange;
             yield [result.primaryKey, result.value];
-            if (mode === 'readwrite' && newValue !== noChange) {
-              await DB.request(result.update(newValue));
+            if (mode === 'readwrite') {
+              switch (newValue) {
+                case noChange:
+                  break;
+                case requestDelete:
+                  await DB.request(result.delete());
+                  break;
+                default:
+                  await DB.request(result.update(newValue));
+                  break;
+              }
             }
             result.continue();
           }
@@ -296,6 +343,12 @@ class DB {
       {
         update(value: unknown) {
           newValue = value;
+        },
+        delete() {
+          newValue = requestDelete;
+        },
+        revert() {
+          newValue = noChange;
         },
       }
     );
@@ -334,19 +387,11 @@ class DB {
         const newKey = await db.put(storeName, key, data);
         return newKey as K;
       },
-      keys(options?: {
-        indexName?: string;
-        query?: IDBValidKey | IDBKeyRange | null;
-        direction?: IDBCursorDirection;
-      }) {
+      keys(options?: KeysOptions) {
         return db.keys(storeName, options) as AsyncGenerator<K, void, unknown>;
       },
       records(options?: RecordsOptions) {
-        return db.records(storeName, options) as AsyncGenerator<
-          [K, T],
-          void,
-          unknown
-        > & {update(value: T): void};
+        return db.records(storeName, options) as AsyncGeneratorForUpdate<K, T>;
       },
       delete(key: K) {
         return db.delete(storeName, key);
@@ -355,72 +400,5 @@ class DB {
         return db.count(storeName, query);
       },
     };
-  }
-}
-
-interface Memo {
-  title: string;
-  hash: string;
-  size: number;
-  lastModified: Date;
-}
-
-const memoDB = new DB(
-  'memo',
-  {
-    memo: {indices: {lastModified: {}, title: {}, size: {}}},
-  },
-  2
-);
-const memoTable = memoDB.store<string, Memo>('memo');
-
-async function saveDocument(documentId: string, hash: string) {
-  const data = await memoTable.get(documentId).catch(() => undefined);
-  if (data?.hash === hash) {
-    return;
-  }
-  await memoTable.put(documentId, {
-    title: document.title,
-    hash,
-    size: hash.length,
-    lastModified: new Date(),
-  });
-}
-
-async function loadDocument(documentId: string): Promise<string> {
-  const {hash} = await memoTable.get(documentId);
-  return hash;
-}
-
-async function* listDocuments(
-  indexName: 'lastModified' | 'title' | 'size',
-  direction: 'prev' | 'next'
-) {
-  yield* memoTable.records({indexName, direction});
-}
-
-async function deleteDocument(documentId: string) {
-  await memoTable.delete(documentId);
-}
-
-/**
- * 各メモごとに暗号化のかけ直し
- * @param oldKey 以前暗号化に使用されていた暗号化共通鍵/公開鍵
- * @param newKey 新しい暗号化共通鍵/公開鍵
- */
-async function migration(
-  oldKey: CryptoKey | CryptoKeyPair,
-  newKey: CryptoKey | CryptoKeyPair
-) {
-  // memoDB.recordsでやるとなぜかdecodeHash内でtransactionが終了して失敗してしまうのでidを先に取得
-  const indices: string[] = [];
-  for await (const id of memoTable.keys()) {
-    indices.push(id);
-  }
-  for (const id of indices) {
-    const data = await memoTable.get(id);
-    const source = await decodeHash(oldKey, data.hash);
-    const hash = await encodeHash(newKey, source);
-    await memoTable.put(id, {...data, hash});
   }
 }
