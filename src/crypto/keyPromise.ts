@@ -26,6 +26,12 @@ const keyPromise = (async () => {
   );
   const password = await passwordPrompt();
   const key = await generateKey(password);
+  const oldKeyPair = localStorage.getItem('crypto-key-pair');
+  if (oldKeyPair) {
+    const keyPair = await importKeyPair(oldKeyPair);
+    await migration(keyPair, key);
+    localStorage.removeItem('crypto-key-pair');
+  }
   localStorage.setItem('crypto-key', await exportKey(key));
   return key;
 })();

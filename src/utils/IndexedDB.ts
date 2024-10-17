@@ -406,11 +406,11 @@ async function deleteDocument(documentId: string) {
 /**
  * 各メモごとに暗号化のかけ直し
  * @param oldKey 以前暗号化に使用されていた暗号化共通鍵/公開鍵
- * @param keyPair 新しい暗号化公開鍵
+ * @param newKey 新しい暗号化共通鍵/公開鍵
  */
 async function migration(
   oldKey: CryptoKey | CryptoKeyPair,
-  keyPair: CryptoKeyPair
+  newKey: CryptoKey | CryptoKeyPair
 ) {
   // memoDB.recordsでやるとなぜかdecodeHash内でtransactionが終了して失敗してしまうのでidを先に取得
   const indices: string[] = [];
@@ -420,7 +420,7 @@ async function migration(
   for (const id of indices) {
     const data = await memoTable.get(id);
     const source = await decodeHash(oldKey, data.hash);
-    const hash = await encodeHash(keyPair, source);
+    const hash = await encodeHash(newKey, source);
     await memoTable.put(id, {...data, hash});
   }
 }
