@@ -145,21 +145,18 @@ ul > li {
 dialog {
   border: none;
   border-radius: 16px;
+  display: flex;
+  flex-flow: column;
 
   > form {
     margin: 0;
-    padding: 1em 0 0 0;
     border: none;
-    width: 100%;
-    height: calc(100% - 1em);
     display: flex;
     flex-flow: column;
     align-items: end;
+    flex-grow: 1;
   }
   .title {
-    position: absolute;
-    top: 8px;
-    left: 16px;
     font-weight: bold;
   }
 }
