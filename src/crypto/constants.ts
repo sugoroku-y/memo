@@ -36,7 +36,7 @@ const aesDerivedKeyParams = {
   length: 128,
 } as const satisfies AesKeyAlgorithm;
 
-const algorismWithIv = {
+const algorithmWithIv = {
   name: algorithmAesGcm,
   iv: Uint8Array.of(118, 189, 225, 216, 181, 156, 148, 59, 210, 99, 84, 136),
 } as const satisfies AesCbcParams;
