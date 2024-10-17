@@ -15,6 +15,8 @@ function openDocumentDialog(currentDocumentId?: string) {
   const dlg = dialog({
     classList: 'open-document',
     title: '保存したメモを開く',
+    // メモを開いていない状態のときは閉じるボタン、Escapeキーで閉じないようにする
+    closeable: currentDocumentId != null,
   })/*html*/ `
     <div class="list">
       <div class="list-item-header">
@@ -26,10 +28,6 @@ function openDocumentDialog(currentDocumentId?: string) {
         <button value="new" title="新しいメモ"></button>
       </div>
     </div>
-    <button value="cancel" title="閉じる" tabIndex="-1" ${
-      // まだメモを開いていないときは無効
-      currentDocumentId ? '' : 'disabled'
-    }></button>
   `;
   const list = dlg.querySelector('div.list')!;
   const header = list.firstElementChild as HTMLDivElement;
@@ -256,14 +254,6 @@ function openDocumentDialog(currentDocumentId?: string) {
     // 新しいメモを開く
     openHash();
   });
-  if (!currentDocumentId) {
-    // メモを開いていない状態のときはEscapeキーで閉じないようにする
-    dlg.addEventListener('keydown', ev => {
-      if (ev.key === 'Escape') {
-        ev.preventDefault();
-      }
-    });
-  }
   document.body.append(dlg);
   dlg.showModal();
 }

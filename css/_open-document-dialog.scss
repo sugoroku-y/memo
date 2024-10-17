@@ -209,36 +209,4 @@ dialog.open-document {
       content: '➕新しいメモ';
     }
   }
-  button[value='cancel'] {
-    width: 2.4em;
-    height: 2.4em;
-    position: absolute;
-    top: 0;
-    right: 0;
-    margin: 2px;
-    background-color: transparent;
-    border-radius: 50%;
-    border-top: solid 1px transparent;
-    border-left: solid 1px transparent;
-    border-bottom: none;
-    border-right: none;
-    &:hover {
-      border-top: none;
-      border-left: none;
-      border-bottom: solid 1px lightgray;
-      border-right: solid 1px lightgray;
-    }
-    &:active {
-      border-top: solid 1px lightgray;
-      border-left: solid 1px lightgray;
-      border-bottom: none;
-      border-right: none;
-    }
-    &::after {
-      content: '❌';
-    }
-    &:disabled {
-      display: none;
-    }
-  }
 }

@@ -144,16 +144,45 @@ function element<N extends keyof HTMLElementTagNameMap>(
   };
 }
 
-function dialog(options?: ElementOptions<'dialog'> & {title?: string}) {
+function dialog(
+  options?: ElementOptions<'dialog'> & {title?: string; closeable?: boolean}
+) {
   return (...args: [TemplateStringsArray, ...unknown[]]) => {
     const dialog = element('dialog', options)``;
     if (options?.title) {
-      dialog.append(element('div', {classList: 'title'})`${options.title}`);
+      const title = element('div', {classList: 'title'})`${options.title}`;
+      dialog.append(title);
     }
     dialog.append(element('form', {properties: {method: 'dialog'}})(...args));
+    if (options?.closeable) {
+      const cancel = element('button', {
+        properties: {value: 'cancel', tabIndex: -1, title: '閉じる'},
+      })``;
+      cancel.addEventListener('click', () => dialog.close('cancel'));
+      dialog.append(cancel);
+    }
     dialog.addEventListener('close', () => {
       dialog.remove();
     });
+    dialog.addEventListener(
+      'keydown',
+      ev => {
+        if (ev.key !== 'Escape') {
+          // Escape以外はそのまま
+          return;
+        }
+        if (options?.closeable) {
+          const cancels = dialog.querySelectorAll('button[value=cancel]');
+          if ([...cancels].some(cancel => !cancel.disabled)) {
+            // キャンセルボタンが存在していずれかのキャンセルボタンが無効でなければEscapeキーを無効化しない
+            return;
+          }
+        }
+        // Escapeキーを無効化
+        ev.preventDefault();
+      },
+      true
+    );
     return dialog;
   };
 }

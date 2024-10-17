@@ -63,12 +63,6 @@ async function passwordPrompt(options: {minLength?: number} = {}) {
     // 値が変更されたら再度確認
     customValidation(input.value === input2.value);
   });
-  // Escapeで閉じられなくする
-  dlg.addEventListener('keydown', ev => {
-    if (ev.key === 'Escape') {
-      ev.preventDefault();
-    }
-  });
   // ダイアログを開いたときに選択状態にする
   input.select();
   document.body.append(dlg);
