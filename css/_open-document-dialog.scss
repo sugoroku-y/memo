@@ -75,12 +75,7 @@ dialog.open-document {
       justify-content: center;
     }
     div.list-item-header + div.list-item-footer {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background-color: canvas;
+      flex-grow: 1;
       &::before {
         content: '保存されたメモがありません。';
         display: block;
@@ -166,6 +161,10 @@ dialog.open-document {
       &[data-direction='next']
       div.list-item-last-modified::after {
       content: '';
+    }
+    // メモが1つもないときは非表示
+    &:has(+ div.list-item-footer) {
+      display: none;
     }
   }
 
