@@ -136,7 +136,7 @@ ul > li {
   width: calc(100% - 2px);
   height: calc(100% - 2px);
   padding: 1px;
-// フォーカスがあるときの枠を非表示にする
+  // フォーカスがあるときの枠を非表示にする
   &:focus-visible {
     outline: none;
   }
@@ -176,12 +176,12 @@ dialog {
     &:hover {
       border-top: none;
       border-left: none;
-      border-bottom: solid 1px rgba(0,0,0,.5);
-      border-right: solid 1px rgba(0,0,0,.5);
+      border-bottom: solid 1px rgba(0, 0, 0, 0.5);
+      border-right: solid 1px rgba(0, 0, 0, 0.5);
     }
     &:active {
-      border-top: solid 1px rgba(0,0,0,.5);
-      border-left: solid 1px rgba(0,0,0,.5);
+      border-top: solid 1px rgba(0, 0, 0, 0.5);
+      border-left: solid 1px rgba(0, 0, 0, 0.5);
       border-bottom: none;
       border-right: none;
     }
