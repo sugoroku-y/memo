@@ -244,6 +244,20 @@ function openDocumentDialog(currentDocumentId?: string) {
         // ↓が押されたら正順で次の項目を選択
         selectNextItem('forward') && ev.preventDefault();
         return;
+      case 'Delete':
+        // フォーカスのある項目を削除
+        document.activeElement
+          ?.closest('div.list-item')
+          ?.querySelector('button[name=delete]')
+          ?.click();
+        return;
+      case 'alt+Enter':
+        // フォーカスのある項目を別タブで開く
+        document.activeElement
+          ?.closest('div.list-item')
+          ?.querySelector('button[name=another-tab]')
+          ?.click();
+        return;
     }
   });
   dlg.addEventListener('close', ev => {
