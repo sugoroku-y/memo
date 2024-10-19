@@ -14,71 +14,71 @@ dialog.open-document {
       outline: none;
     }
 
-    div.list-item,
-    div.list-item-header {
-      display: flex;
-      flex-flow: row;
-      justify-content: space-between;
-      align-items: stretch;
-    }
-
-    div.list-item {
-      outline: none;
-      &:focus-within {
-        background-color: rgb(224, 224, 224);
-        button {
-          opacity: 1;
-        }
-      }
-      &:focus-within {
-        font-weight: bold;
-      }
-      button {
-        opacity: 0;
-        transition: opacity 1s;
-      }
-      button[name='another-tab'] {
-        position: relative;
-        &::before {
-          content: '';
-          display: block;
-          position: absolute;
-          bottom: 0.6em;
-          left: 0.6em;
-          width: 0.9em;
-          height: 0.9em;
-          border: solid 1px currentColor;
-        }
-        &::after {
-          content: '↗';
-          display: block;
-          position: absolute;
-          bottom: 0.7em;
-          left: 1.1em;
-        }
-      }
-      button[name='open'] {
-        &::after {
-          content: '▶';
-        }
-      }
-      button[name='delete'] {
-        &::after {
-          content: '\01f5d1\0fe0f';
-        }
-      }
-    }
-    div.list-item-footer {
-      display: flex;
-      flex-flow: column;
-      align-items: center;
-      justify-content: center;
-    }
-    div.list-item-header + div.list-item-footer {
+    // 保存されたメモが1つもないとき
+    &:not(:has(div.list-item)){
+      // スクロールバーは非表示
+      overflow: hidden;
+      // 真ん中にメッセージを表示
       flex-grow: 1;
+      justify-content: center;
+      align-items: center;
       &::before {
         content: '保存されたメモがありません。';
+      }
+    }
+  }
+
+  div.list-item,
+  div.list-item-header {
+    display: flex;
+    flex-flow: row;
+    justify-content: space-between;
+    align-items: stretch;
+  }
+
+  div.list-item {
+    outline: none;
+    &:focus-within {
+      background-color: rgb(224, 224, 224);
+      button {
+        opacity: 1;
+      }
+    }
+    &:focus-within {
+      font-weight: bold;
+    }
+    button {
+      opacity: 0;
+      transition: opacity 1s;
+    }
+    button[name='another-tab'] {
+      position: relative;
+      &::before {
+        content: '';
         display: block;
+        position: absolute;
+        bottom: 0.6em;
+        left: 0.6em;
+        width: 0.9em;
+        height: 0.9em;
+        border: solid 1px currentColor;
+      }
+      &::after {
+        content: '↗';
+        display: block;
+        position: absolute;
+        bottom: 0.7em;
+        left: 1.1em;
+      }
+    }
+    button[name='open'] {
+      &::after {
+        content: '▶';
+      }
+    }
+    button[name='delete'] {
+      &::after {
+        content: '\01f5d1\0fe0f';
       }
     }
   }
@@ -116,6 +116,10 @@ dialog.open-document {
     flex-basis: 2.4em * 3;
   }
   div.list-item-header {
+    // ヘッダを上辺に固定
+    position: sticky;
+    top: 0;
+
     div.list-item-title,
     div.list-item-size,
     div.list-item-last-modified {
@@ -162,9 +166,26 @@ dialog.open-document {
       div.list-item-last-modified::after {
       content: '';
     }
-    // メモが1つもないときは非表示
-    &:has(+ div.list-item-footer) {
+    // 保存されたメモが1つもないときはヘッダを非表示
+    &:not(:has(+ div.list-item)) {
       display: none;
+    }
+  }
+  // 新しいメモボタンの位置揃え
+  div.list-item-footer {
+    // メモの数がリストに対して少ないときでも下辺に揃える
+    flex-grow: 1;
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    // メモの数がリストに対して多いときに下辺に留める
+    position: sticky;
+    bottom: 0;
+    // 保存されたメモが1つもないときも下辺に揃える
+    &:not(:is(div.list-item + *)) {
+      position: absolute;
+      bottom: 0;
+      right: 0;
     }
   }
 
@@ -195,17 +216,11 @@ dialog.open-document {
     }
   }
   button[value='new'] {
-    margin-left: 5px;
-    width: 8em;
-    margin: 0 auto;
-    &:hover {
-      background-color: rgb(252, 252, 252);
-    }
-    &:focus-visible {
-      background-color: rgb(252, 252, 252);
-    }
+    font-size: xxx-large;
+    background-color: rgb(252, 252, 252);
+    padding: 0;
     &::after {
-      content: '➕新しいメモ';
+      content: '➕';
     }
   }
 }
