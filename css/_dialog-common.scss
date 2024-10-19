@@ -1,0 +1,48 @@
+dialog {
+  border: none;
+  border-radius: 16px;
+  display: flex;
+  flex-flow: column;
+
+  > form {
+    margin: 0;
+    border: none;
+    display: flex;
+    flex-flow: column;
+    align-items: end;
+    flex-grow: 1;
+  }
+  .title {
+    font-weight: bold;
+  }
+
+  button[value='cancel'] {
+    width: 2.4em;
+    height: 2.4em;
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 2px;
+    background-color: transparent;
+    border-radius: 50%;
+    border-top: solid 1px transparent;
+    border-left: solid 1px transparent;
+    border-bottom: none;
+    border-right: none;
+    &:hover {
+      border-top: none;
+      border-left: none;
+      border-bottom: solid 1px rgba(0, 0, 0, 0.5);
+      border-right: solid 1px rgba(0, 0, 0, 0.5);
+    }
+    &:active {
+      border-top: solid 1px rgba(0, 0, 0, 0.5);
+      border-left: solid 1px rgba(0, 0, 0, 0.5);
+      border-bottom: none;
+      border-right: none;
+    }
+    &::after {
+      content: '❌';
+    }
+  }
+}
