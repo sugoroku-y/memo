@@ -25,7 +25,7 @@ function openDocumentDialog(currentDocumentId?: string) {
         <div class="list-item-last-modified">最終更新日時</div>
       </div>
       <div class="list-item-footer">
-        <button value="new" title="新しいメモ"></button>
+        <button value="new" title="新しいメモ(N)" accesskey="N"></button>
       </div>
     </div>
   `;
