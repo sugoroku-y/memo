@@ -254,6 +254,44 @@ const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
   Backspace(root) {
     return deleteStyledElement(true) || deleteTableCell(root, true);
   },
+  Enter() {
+    const sel = getSelection();
+    if (!sel?.isCollapsed) {
+      // 選択状態では標準のまま
+      return false;
+    }
+    const td = closest(sel.focusNode, 'td,th');
+    if (!td) {
+      // キャレットがテーブルのセル内になければ標準のまま
+      return false;
+    }
+    const table = td.closest('table');
+    if (!table) {
+      // 上位にテーブルが存在していないセルなら標準のまま
+      return false;
+    }
+    const cells = table.querySelectorAll('td,th');
+    const index = indexOf(cells, td);
+    if (index === undefined) {
+      // 現在位置のセルが見つからなければ標準のまま
+      return false;
+    }
+    let next: Node | undefined = cells[index + 1];
+    if (!next) {
+      // 次のセルが見つからない=最後のセルだったら
+      if (table.nextSibling) {
+        // テーブルの次があればそちらに移動
+        next = table.nextSibling;
+      } else {
+        // なければdivを追加してそちらに移動
+        const div = element('div')`<br/>`;
+        table.after(div);
+        next = div;
+      }
+    }
+    sel.setPosition(next, 0);
+    return true;
+  },
   // Undo
   ['ctrl+z']() {
     // 編集履歴はブラウザの履歴として残っているので戻るとUndoになる
