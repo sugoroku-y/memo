@@ -40,14 +40,23 @@ td {
 }
 
 pre {
-  padding: 5px;
+  padding: 0 5px;
   margin: 0.5em auto;
+  &::before,
+  &::after {
+    content: '```';
+    display: block;
+    margin: 0 -5px;
+    background-color: map-get($colors, 'background');;
+  }
 }
 
 code {
   &::before,
   &::after {
     content: '`';
+    display: inline-block;
+    background-color: map-get($colors, 'background');;
   }
 }
 
@@ -55,12 +64,16 @@ em {
   &::before,
   &::after {
     content: '*';
+    display: inline-block;
+    font-style: normal;
   }
 }
 strong {
   &::before,
   &::after {
     content: '**';
+    display: inline-block;
+    font-weight: normal;
   }
 }
 
@@ -68,6 +81,7 @@ strike {
   &::before,
   &::after {
     content: '~~';
+    display: inline-block;
   }
 }
 
