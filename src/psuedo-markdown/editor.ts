@@ -268,6 +268,10 @@ const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
   },
   // 強調/強い強調
   ['*']() {
+    if (inPre()) {
+      // preタグの中では無効
+      return false;
+    }
     if (!checkSurroundStyledText('strong')) {
       return false;
     }
@@ -285,6 +289,10 @@ const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
   },
   // 取り消し線
   ['~']() {
+    if (inPre()) {
+      // preタグの中では無効
+      return false;
+    }
     if (!checkSurroundStyledText('strike')) {
       return false;
     }
@@ -293,6 +301,10 @@ const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
   },
   // コード
   ['`']() {
+    if (inPre()) {
+      // preタグの中では無効
+      return false;
+    }
     if (!checkSurroundStyledText('code')) {
       return false;
     }
@@ -300,6 +312,11 @@ const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
     return surroundStyledText('code');
   },
 };
+
+function inPre() {
+  const sel = getSelection();
+  return closest(sel?.focusNode, 'pre') || closest(sel?.anchorNode, 'pre');
+}
 
 function checkSurroundStyledText(styledLocalName: string) {
   const sel = getSelection();
@@ -858,7 +875,11 @@ async function prepareEditor(root: HTMLDivElement) {
       return;
     }
     const source = document.createElement('div');
-    source.innerHTML = ev.dataTransfer.getData('text/html');
+    if (inPre()) {
+      source.textContent = ev.dataTransfer.getData('text/plain');
+    } else {
+      source.innerHTML = ev.dataTransfer.getData('text/html');
+    }
     // 余計な属性・要素を除去
     for (const e of source.querySelectorAll('*')) {
       e.removeAttribute('data-document-id');
