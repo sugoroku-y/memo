@@ -13,8 +13,12 @@ function closest<K extends string>(node: Node | null | undefined, selector: K) {
   );
 }
 
-function* ancestors(node: Node | null | undefined) {
-  for (; node; node = node.parentNode) {
+function* ancestors(start: Node | null | undefined) {
+  for (
+    let node = asText(start)?.parentElement ?? asElement(start) ?? null;
+    node;
+    node = node.parentElement
+  ) {
     yield node;
   }
 }
