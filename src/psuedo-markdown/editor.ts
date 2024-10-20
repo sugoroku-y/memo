@@ -686,6 +686,7 @@ async function prepareEditor(root: HTMLDivElement) {
         case 'h3':
         case 'h4':
         case 'h5':
+        case 'h6':
         case 'pre':
           if (elm.firstChild === elm.lastChild) {
             const child = asElement(elm.firstChild);
@@ -825,12 +826,12 @@ async function prepareEditor(root: HTMLDivElement) {
       const range = sel.rangeCount > 0 ? sel.getRangeAt(0) : undefined;
       let modified;
       for (const div of document.querySelectorAll('#contentBox > *')) {
-        if (!/^(?:h([12345])|div)$/.test(div.localName)) {
+        if (!/^(?:h([123456])|div)$/.test(div.localName)) {
           continue;
         }
         const current = Number(div.localName.charAt(1)) || 0;
         const actual =
-          asText(div.firstChild)?.data.match(/^#{1,5}(?=[ \xa0])/)?.[0]
+          asText(div.firstChild)?.data.match(/^#{1,6}(?=[ \xa0])/)?.[0]
             .length ?? 0;
         if (current === actual) {
           continue;
@@ -867,7 +868,7 @@ async function prepareEditor(root: HTMLDivElement) {
       for (const e of source.querySelectorAll('[data-document-id]')) {
         e.removeAttribute('data-document-id');
       }
-      for (const e of source.querySelectorAll('h1,h2,h3,h4,h5')) {
+      for (const e of source.querySelectorAll('h1,h2,h3,h4,h5,h6')) {
         const div = document.createElement('div');
         div.append(...e.childNodes);
         e.replaceWith(div);
