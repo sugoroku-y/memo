@@ -1,15 +1,9 @@
-function confirmDialog(message: string): Promise<boolean> {
-  const dlg = dialog({classList: 'confirm'})/*html*/ `
+function confirmDialog(message: string) {
+  return showModal(dialog({classList: 'confirm'})/*html*/ `
     <div class="message">${message}</div>
     <div class="buttons">
       <button value="yes">はい</button>
       <button value="no">いいえ</button>
     </div>
-  `;
-  dlg.showModal();
-  return new Promise(resolve => {
-    dlg.addEventListener('close', () => {
-      resolve(dlg.returnValue === 'yes');
-    });
-  });
+  `);
 }

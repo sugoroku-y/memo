@@ -184,7 +184,7 @@ function openDocumentDialog(currentDocumentId?: string) {
               const answer = await confirmDialog(
                 `${title}を削除します。\nよろしいですか?`
               );
-              if (!answer) {
+              if (answer === 'no') {
                 // いいえが選択されたら何もしない
                 return;
               }
@@ -268,5 +268,5 @@ function openDocumentDialog(currentDocumentId?: string) {
     // 新しいメモを開く
     openHash();
   });
-  dlg.showModal();
+  showModal(dlg);
 }

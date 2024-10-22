@@ -69,11 +69,11 @@ window.addEventListener('DOMContentLoaded', () => {
         const answer = await confirmDialog(
           '再起動するまで設定は反映されません。再起動しますか?'
         );
-        if (answer) {
+        if (answer === 'yes') {
           location.href = location.pathname;
         }
       })();
     });
-    settings.showModal();
+    showModal(settings);
   });
 });

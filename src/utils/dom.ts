@@ -187,7 +187,16 @@ function dialog(
       },
       true
     );
-    document.body.append(dialog);
     return dialog;
   };
+}
+
+function showModal(dialog: HTMLDialogElement) {
+  document.body.append(dialog);
+  dialog.showModal();
+  return new Promise<string>(resolve => {
+    dialog.addEventListener('close', () => {
+      resolve(dialog.returnValue);
+    });
+  });
 }

@@ -12,7 +12,7 @@ async function applyHash(root: HTMLDivElement) {
           .replace(/^ +/gm, '')
           .slice(1, -1)
       );
-      if (answer) {
+      if (answer === 'yes') {
         // パスワードをリセットしてリロード
         resetKey();
       }

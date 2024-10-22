@@ -60,13 +60,11 @@ async function passwordPrompt(options: {minLength?: number} = {}) {
     // 目のアイコンをクリックすることでパスワード入力フィールドと通常のテキストフィールドを切り替える
     input.type = checkbox.checked ? 'text' : 'password';
   });
+  // submitできたらパスワードを返す
+  dlg.addEventListener('submit', () => {
+    dlg.close(input.value);
+  });
   // ダイアログを開いたときに自動生成したパスワードを選択状態にする
   input.select();
-  dlg.showModal();
-  // submitできたらパスワードを返す
-  return await new Promise<string>(resolve => {
-    dlg.addEventListener('submit', () => {
-      resolve(input.value);
-    });
-  });
+  return showModal(dlg);
 }
