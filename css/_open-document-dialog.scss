@@ -54,22 +54,14 @@ dialog.open-document {
     button[name='another-tab'] {
       position: relative;
       &::before {
-        content: '';
-        display: block;
-        position: absolute;
-        bottom: 0.6em;
-        left: 0.6em;
-        width: 0.9em;
-        height: 0.9em;
-        border: solid 1px;
-        @include darkOrLight(border-color, 'button-foreground');
+        content: '▶';
       }
       &::after {
-        content: '↗';
+        content: '➕';
         display: block;
         position: absolute;
-        bottom: 0.7em;
-        left: 1.1em;
+        bottom: 0.3em;
+        left: 0.9em;
       }
     }
     button[name='open'] {
