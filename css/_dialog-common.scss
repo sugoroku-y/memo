@@ -1,4 +1,6 @@
 dialog {
+  @include darkOrLight(background-color, 'background');
+  @include darkOrLight(color, 'foreground');
   border: none;
   border-radius: 16px;
   display: flex;
@@ -17,6 +19,11 @@ dialog {
     font-weight: bold;
   }
 
+  button {
+    @include darkOrLight(color, 'button-foreground');
+    @include darkOrLight(background-color, 'button-background');
+  }
+
   button[value='cancel'] {
     width: 2.4em;
     height: 2.4em;
@@ -33,17 +40,33 @@ dialog {
     &:hover {
       border-top: none;
       border-left: none;
-      border-bottom: solid 1px rgba(0, 0, 0, 0.5);
-      border-right: solid 1px rgba(0, 0, 0, 0.5);
+      border-bottom: solid 1px;
+      border-right: solid 1px;
+      @include darkOrLight(border-bottom-color, 'button-shadow');
+      @include darkOrLight(border-right-color, 'button-shadow');
     }
     &:active {
-      border-top: solid 1px rgba(0, 0, 0, 0.5);
-      border-left: solid 1px rgba(0, 0, 0, 0.5);
+      border-top: solid 1px;
+      border-left: solid 1px;
+      @include darkOrLight(border-top-color, 'button-shadow');
+      @include darkOrLight(border-left-color, 'button-shadow');
       border-bottom: none;
       border-right: none;
     }
     &::after {
       content: '❌';
     }
+  }
+}
+
+dialog {
+  // 標準のbackdropはdarkモードを考慮されていないので修正
+  &::backdrop {
+    @include darkOrLight(background-color, 'backdrop');
+  }
+  // 標準のinputもdarkモードを考慮されていないので修正
+  input {
+    @include darkOrLight(color, 'foreground');
+    @include darkOrLight(background-color, 'background');
   }
 }

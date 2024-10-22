@@ -1,16 +1,30 @@
 $dark: (
   foreground: rgb(224, 224, 224),
-  background: rgb(30, 30, 30),
+  background: rgb(32, 32, 32),
   emphasis: rgb(64, 64, 64),
   link: rgb(0, 160, 255),
   visited: rgb(192, 128, 255),
+  list: rgb(16, 16, 16),
+  list-header: rgb(19, 133, 168),
+  list-active: rgb(32, 32, 32),
+  button-foreground: rgb(224, 224, 224),
+  button-background: rgb(64, 64, 64),
+  button-shadow: rgba(255, 255, 255, 0.5),
+  backdrop: rgba(255,255,255,0.1),
 );
 $light: (
-  foreground: rgb(30, 30, 30),
+  foreground: rgb(32, 32, 32),
   background: rgb(252, 252, 252),
   emphasis: rgb(224, 224, 224),
   link: rgb(0, 0, 255),
   visited: rgb(192, 0, 255),
+  list: rgb(240, 240, 240),
+  list-header: rgb(175, 231, 248),
+  list-active: rgb(224, 224, 224),
+  button-foreground: rgb(32, 32, 32),
+  button-background: rgb(224, 224, 224),
+  button-shadow: rgba(0, 0, 0, 0.5),
+  backdrop: rgba(0,0,0,0.1),
 );
 
 @mixin darkOrLight($property, $color) {
