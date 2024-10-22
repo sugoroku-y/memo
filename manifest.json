@@ -8,11 +8,23 @@
     {
       "name": "新規メモ",
       "short_name": "New",
+      "icons": [
+        {
+          "src": "memo-pencil-svgrepo-com.svg",
+          "sizes": "192x192"
+        }
+      ],
       "url": "./"
     },
     {
       "name": "保存したメモを開く",
       "short_name": "Open",
+      "icons": [
+        {
+          "src": "memo-pencil-svgrepo-com.svg",
+          "sizes": "192x192"
+        }
+      ],
       "url": "./?open"
     }
   ],
