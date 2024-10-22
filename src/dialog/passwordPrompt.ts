@@ -17,7 +17,6 @@ async function passwordPrompt(options: {minLength?: number} = {}) {
   const randomPassword = Math.random().toString(36).slice(2);
   const dlg = dialog({
     classList: 'password-prompt',
-    title: ' ',
   })/* html */ `
     <label></label>
     <div>

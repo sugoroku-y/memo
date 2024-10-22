@@ -70,3 +70,9 @@ dialog {
     @include darkOrLight(background-color, 'background');
   }
 }
+
+@mixin title($title) {
+  > .title::before {
+    content: $title;
+  }
+}

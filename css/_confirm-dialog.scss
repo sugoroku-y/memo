@@ -4,5 +4,11 @@ dialog.confirm {
   }
   button {
     margin-right: 10px;
+    &[value='yes']::before {
+      content: 'はい';
+    }
+    &[value='no']::before {
+      content: 'いいえ';
+    }
   }
 }

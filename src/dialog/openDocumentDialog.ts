@@ -14,7 +14,6 @@ function openDocumentDialog(currentDocumentId?: string) {
   };
   const dlg = dialog({
     classList: 'open-document',
-    title: '保存したメモを開く',
     // メモを開いていない状態のときは閉じるボタン、Escapeキーで閉じないようにする
     closeable: currentDocumentId != null,
   })/*html*/ `

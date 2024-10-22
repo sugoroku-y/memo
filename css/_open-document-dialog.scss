@@ -1,4 +1,5 @@
 dialog.open-document {
+  @include title('保存したメモを開く');
   width: 80%;
   height: 80%;
   div.list {

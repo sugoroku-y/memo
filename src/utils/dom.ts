@@ -153,17 +153,15 @@ function dialog(
 ) {
   return (...args: [TemplateStringsArray, ...unknown[]]) => {
     const dialog = element('dialog', options)``;
-    if (options?.title) {
-      const title = element('div', {classList: 'title'})`${options.title}`;
-      dialog.append(title);
-    }
+    const title = element('div', {classList: 'title'})`${options?.title ?? ''}`;
+    dialog.append(title);
     dialog.append(element('form', {properties: {method: 'dialog'}})(...args));
     if (options?.closeable) {
       const cancel = element('button', {
         properties: {value: 'cancel', tabIndex: -1, title: '閉じる'},
       })``;
       cancel.addEventListener('click', () => dialog.close('cancel'));
-      dialog.append(cancel);
+      title.append(cancel);
     }
     dialog.addEventListener('close', () => {
       dialog.remove();

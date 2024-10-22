@@ -43,7 +43,6 @@ window.addEventListener('DOMContentLoaded', () => {
     const settings = dialog({
       classList: 'settings',
       closeable: true,
-      title: '設定',
     })/*html*/ `
       <label>初期タイトル</label><input />
       <label><input type="checkbox">公開鍵暗号を使う</label>
