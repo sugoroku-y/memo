@@ -1,0 +1,54 @@
+div.menu {
+  display: flex;
+  background-color: transparent;
+  position: absolute;
+  top: 0;
+  right: 0;
+  opacity: 0.5;
+  transform: scale(0.5);
+  transform-origin: top right;
+  transition-property: opacity, background-color, transform;
+  transition-duration: 1s;
+
+  button {
+    pointer-events: none;
+    @include darkOrLight(color, 'foreground');
+    background-color: transparent;
+    outline: none;
+    &:focus-visible {
+      outline: none;
+    }
+    width: 48px;
+    height: 48px;
+    padding: 2px;
+    border-radius: 50%;
+    border-top: 1px solid transparent;
+    border-bottom: none;
+    border-left: 1px solid transparent;
+    border-right: none;
+  }
+  &:hover {
+    opacity: 1;
+    transform: scale(1);
+    @include darkOrLight(background-color, 'background');
+    button {
+      pointer-events: auto;
+      &:hover {
+        border-bottom: 1px solid;
+        border-top: none;
+        border-right: 1px solid;
+        border-left: none;
+        @include darkOrLight(border-bottom-color, 'button-shadow');
+        @include darkOrLight(border-right-color, 'button-shadow');
+      }
+      &:active {
+        border-top: 1px solid;
+        border-bottom: none;
+        border-left: 1px solid;
+        border-right: none;
+        @include darkOrLight(border-top-color, 'button-shadow');
+        @include darkOrLight(border-left-color, 'button-shadow');
+      }
+    }
+  }
+}

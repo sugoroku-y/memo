@@ -3,6 +3,8 @@
 @import 'open-document-dialog';
 @import 'confirm-dialog';
 @import 'dialog-common';
+@import 'settings';
+@import 'menu';
 
 body {
   @include darkOrLight(background-color, 'background');

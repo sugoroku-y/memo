@@ -1,0 +1,33 @@
+dialog.settings {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: fit-content;
+  height: fit-content;
+  @include darkOrLight(color, 'foreground');
+  @include darkOrLight(background-color, 'background');
+  margin: 0 0 auto auto;
+  padding: 0.5em;
+  border-radius: 1em;
+  > form {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    gap: 0.5em;
+    align-items: center;
+    > label {
+      justify-self: flex-start;
+      white-space: nowrap;
+      grid-column-start: 1;
+      &:has(input) {
+        grid-column-end: -1;
+      }
+    }
+    > input {
+      grid-column: 2/-1;
+      border: none;
+    }
+    > button:last-of-type {
+      grid-column: -2;
+    }
+  }
+}
