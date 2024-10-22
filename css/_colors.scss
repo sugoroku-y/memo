@@ -12,3 +12,11 @@ $light: (
   link: rgb(0, 0, 255),
   visited: rgb(192, 0, 255),
 );
+
+@mixin darkOrLight($property, $color) {
+  #{$property}: map-get($light, $color);
+
+  @media (prefers-color-scheme: dark) {
+    #{$property}: map-get($dark, $color);
+  }
+}

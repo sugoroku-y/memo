@@ -4,11 +4,9 @@
 @import 'confirm-dialog';
 @import 'dialog-common';
 
-$colors: $light;
-
 body {
-  background-color: map-get($colors, 'background');
-  color: map-get($colors, 'foreground');
+  @include darkOrLight(background-color, 'background');
+  @include darkOrLight(color, 'foreground');
   font-size: 15px;
   width: 100vw;
   height: 100vh;
@@ -17,17 +15,17 @@ body {
 }
 
 a:visited {
-  color: map-get($colors, 'visited');
+  @include darkOrLight(color, 'visited');
 }
 
 a {
-  color: map-get($colors, 'link');
+  @include darkOrLight(color, 'link');
 }
 
 pre,
 code,
 th {
-  background-color: map-get($colors, 'emphasis');
+  @include darkOrLight(background-color, 'emphasis');
 }
 
 td {
@@ -35,8 +33,8 @@ td {
   border-bottom: solid 1px;
 }
 td {
-  border-right-color: map-get($colors, 'emphasis');
-  border-bottom-color: map-get($colors, 'emphasis');
+  @include darkOrLight(border-right-color, 'emphasis');
+  @include darkOrLight(border-bottom-color, 'emphasis');
 }
 
 pre {
@@ -47,7 +45,7 @@ pre {
     content: '```';
     display: block;
     margin: 0 -5px;
-    background-color: map-get($colors, 'background');;
+    @include darkOrLight(background-color, 'background');
   }
 }
 
@@ -56,7 +54,7 @@ code {
   &::after {
     content: '`';
     display: inline-block;
-    background-color: map-get($colors, 'background');;
+    @include darkOrLight(background-color, 'background');
   }
 }
 
@@ -82,33 +80,6 @@ strike {
   &::after {
     content: '~~';
     display: inline-block;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  $colors: $dark;
-  body {
-    background-color: map-get($colors, 'background');
-    color: map-get($colors, 'foreground');
-  }
-
-  a:visited {
-    color: map-get($colors, 'visited');
-  }
-
-  a {
-    color: map-get($colors, 'link');
-  }
-
-  pre,
-  code,
-  th {
-    background-color: map-get($colors, 'emphasis');
-  }
-
-  td {
-    border-right-color: map-get($colors, 'emphasis');
-    border-bottom-color: map-get($colors, 'emphasis');
   }
 }
 
