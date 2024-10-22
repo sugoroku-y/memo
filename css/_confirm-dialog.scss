@@ -2,6 +2,9 @@ dialog.confirm {
   div.message {
     white-space: pre-wrap;
   }
+  .buttons {
+    display: flex;
+  }
   button {
     margin-right: 10px;
     &[value='yes']::before {

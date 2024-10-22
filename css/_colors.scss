@@ -10,6 +10,7 @@ $dark: (
   button-foreground: rgb(224, 224, 224),
   button-background: rgb(64, 64, 64),
   button-shadow: rgba(255, 255, 255, 0.5),
+  button-darkshadow: rgba(255, 255, 255, 0.2),
   backdrop: rgba(255,255,255,0.1),
 );
 $light: (
@@ -24,6 +25,7 @@ $light: (
   button-foreground: rgb(32, 32, 32),
   button-background: rgb(224, 224, 224),
   button-shadow: rgba(0, 0, 0, 0.5),
+  button-darkshadow: rgba(0, 0, 0, 0.8),
   backdrop: rgba(0,0,0,0.1),
 );
 

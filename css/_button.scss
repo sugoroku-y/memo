@@ -1,0 +1,33 @@
+button {
+  @include darkOrLight(color, 'button-foreground');
+  @include darkOrLight(background-color, 'button-background');
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-top: solid 1px transparent;
+  border-left: solid 1px transparent;
+  border-bottom: none;
+  border-right: none;
+  border-radius: 0.7em;
+  &:focus-visible,
+  &:hover {
+    border-top: none;
+    border-left: none;
+    border-bottom: solid 1px;
+    border-right: solid 1px;
+    @include darkOrLight(border-bottom-color, 'button-shadow');
+    @include darkOrLight(border-right-color, 'button-shadow');
+  }
+  &:active {
+    border-top: solid 1px;
+    border-left: solid 1px;
+    @include darkOrLight(border-top-color, 'button-darkshadow');
+    @include darkOrLight(border-left-color, 'button-darkshadow');
+    border-bottom: none;
+    border-right: none;
+  }
+  &:focus-visible {
+    outline: none;
+  }
+}
+

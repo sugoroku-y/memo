@@ -22,33 +22,15 @@ div.menu {
     height: 48px;
     padding: 2px;
     border-radius: 50%;
-    border-top: 1px solid transparent;
-    border-bottom: none;
-    border-left: 1px solid transparent;
-    border-right: none;
   }
   &:hover {
     opacity: 1;
     transform: scale(1);
     @include darkOrLight(background-color, 'background');
     button {
+      @include darkOrLight(color, 'button-foreground');
+      @include darkOrLight(background-color, 'button-background');
       pointer-events: auto;
-      &:hover {
-        border-bottom: 1px solid;
-        border-top: none;
-        border-right: 1px solid;
-        border-left: none;
-        @include darkOrLight(border-bottom-color, 'button-shadow');
-        @include darkOrLight(border-right-color, 'button-shadow');
-      }
-      &:active {
-        border-top: 1px solid;
-        border-bottom: none;
-        border-left: 1px solid;
-        border-right: none;
-        @include darkOrLight(border-top-color, 'button-shadow');
-        @include darkOrLight(border-left-color, 'button-shadow');
-      }
     }
   }
 }

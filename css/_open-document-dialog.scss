@@ -51,6 +51,7 @@ dialog.open-document {
     button {
       opacity: 0;
       transition: opacity 1s;
+      background-color: transparent;
     }
     button[name='another-tab'] {
       position: relative;
@@ -186,39 +187,14 @@ dialog.open-document {
     }
   }
 
-  button {
-    background-color: transparent;
-    border-bottom: solid 1px transparent;
-    border-right: solid 1px transparent;
-    border-top: none;
-    border-left: none;
-    &:focus-visible,
-    &:hover {
-      border-bottom: solid 1px;
-      border-right: solid 1px;
-      @include darkOrLight(border-bottom-color, 'button-shadow');
-      @include darkOrLight(border-right-color, 'button-shadow');
-      border-top: none;
-      border-left: none;
-    }
-    &:active {
-      border-bottom: none;
-      border-right: none;
-      border-top: solid 1px;
-      border-left: solid 1px;
-      @include darkOrLight(border-top-color, 'button-shadow');
-      @include darkOrLight(border-left-color, 'button-shadow');
-    }
-    &:focus-visible {
-      outline: none;
-    }
-  }
   div.list-item-buttons button {
     width: 2.4em;
     height: 2.4em;
     border-radius: 1.2em;
   }
   button[value='new'] {
+    @include darkOrLight(background-color, 'list');
+    line-height: 140%;
     font-size: xxx-large;
     border-radius: 50%;
     padding: 0;
