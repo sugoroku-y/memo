@@ -6,7 +6,6 @@ function confirmDialog(message: string): Promise<boolean> {
       <button value="no">いいえ</button>
     </div>
   `;
-  document.body.append(dlg);
   dlg.showModal();
   return new Promise(resolve => {
     dlg.addEventListener('close', () => {

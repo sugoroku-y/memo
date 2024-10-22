@@ -74,7 +74,6 @@ window.addEventListener('DOMContentLoaded', () => {
         }
       })();
     });
-    document.body.append(settings);
     settings.showModal();
   });
 });

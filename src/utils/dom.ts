@@ -187,6 +187,7 @@ function dialog(
       },
       true
     );
+    document.body.append(dialog);
     return dialog;
   };
 }

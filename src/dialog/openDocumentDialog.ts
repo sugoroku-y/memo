@@ -268,6 +268,5 @@ function openDocumentDialog(currentDocumentId?: string) {
     // 新しいメモを開く
     openHash();
   });
-  document.body.append(dlg);
   dlg.showModal();
 }

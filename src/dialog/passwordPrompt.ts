@@ -62,7 +62,6 @@ async function passwordPrompt(options: {minLength?: number} = {}) {
   });
   // ダイアログを開いたときに自動生成したパスワードを選択状態にする
   input.select();
-  document.body.append(dlg);
   dlg.showModal();
   // submitできたらパスワードを返す
   return await new Promise<string>(resolve => {
