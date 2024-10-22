@@ -41,5 +41,6 @@ const keyPromise = (async () => {
  */
 function resetKey(): never {
   localStorage.removeItem('crypto-key-pair');
+  localStorage.removeItem('crypto-key');
   return location.reload() as never;
 }
