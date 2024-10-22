@@ -17,12 +17,11 @@ body {
   padding: 0;
 }
 
-a:visited {
-  @include darkOrLight(color, 'visited');
-}
-
 a {
   @include darkOrLight(color, 'link');
+  &:visited {
+    @include darkOrLight(color, 'visited');
+  }
 }
 
 pre,
