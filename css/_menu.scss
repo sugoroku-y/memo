@@ -29,8 +29,10 @@ div#menu {
     @include darkOrLight(background-color, 'background');
     button {
       @include darkOrLight(color, 'button-foreground');
-      @include darkOrLight(background-color, 'button-background');
       pointer-events: auto;
+      &:hover {
+        @include darkOrLight(background-color, 'button-background');
+      }
     }
   }
 }
