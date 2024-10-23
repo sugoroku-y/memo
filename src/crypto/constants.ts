@@ -36,10 +36,21 @@ const aesDerivedKeyParams = {
   length: 128,
 } as const satisfies AesKeyAlgorithm;
 
-const algorithmWithIv = {
-  name: algorithmAesGcm,
-  iv: Uint8Array.of(118, 189, 225, 216, 181, 156, 148, 59, 210, 99, 84, 136),
-} as const satisfies AesCbcParams;
+// 互換のため古い方式で使っていたivを残す
+const oldIv = Uint8Array.of(
+  118,
+  189,
+  225,
+  216,
+  181,
+  156,
+  148,
+  59,
+  210,
+  99,
+  84,
+  136
+);
 
 const algorithmRsaOaep = 'RSA-OAEP';
 
@@ -51,9 +62,9 @@ const hashSha256 = 'SHA-256';
 const algorithmRsaHashedKeyGen = {
   name: algorithmRsaOaep,
   modulusLength: 2048,
-  publicExponent: new Uint8Array([1, 0, 1]),
+  publicExponent: Uint8Array.of(1, 0, 1),
   hash: hashSha256,
-} satisfies RsaHashedKeyGenParams;
+} as const satisfies RsaHashedKeyGenParams;
 
 const usageEncryptDecrypt = [
   'encrypt',
