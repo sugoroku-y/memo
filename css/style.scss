@@ -4,8 +4,8 @@
 @import 'password-dialog';
 @import 'open-document-dialog';
 @import 'confirm-dialog';
-@import 'settings';
 @import 'menu';
+@import 'settings';
 
 body {
   @include darkOrLight(background-color, 'background');

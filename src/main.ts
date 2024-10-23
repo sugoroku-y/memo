@@ -1,3 +1,4 @@
+declare const menu: HTMLDivElement;
 declare const contentBox: HTMLDivElement;
 
 window.addEventListener('load', () => {
