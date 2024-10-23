@@ -1,0 +1,17 @@
+window.addEventListener('DOMContentLoaded', () => {
+  const open = element('button', {
+    properties: {id: 'open', tabIndex: -1, title: '保存したメモを開く'},
+  })/* html */ `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+    stroke-linejoin="round" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="13" stroke-width="0.1"/>
+    <path d="M4 20h13l6-6h-13z"/>
+    <path d="M7 16v-10a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v7 m-11-5h8m0 3h-8"/>
+    <path d="M4 20v-13h3"/>
+    </svg>
+  `;
+  menu.append(open);
+  open.addEventListener('click', () => {
+    openDocumentDialog(documentId);
+  });
+});
