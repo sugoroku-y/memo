@@ -1,9 +1,10 @@
 div#menu {
   display: flex;
   background-color: transparent;
-  position: absolute;
+  position: fixed;
   top: 0;
   right: 0;
+  width: fit-content;
   opacity: 0.5;
   transform: scale(0.5);
   transform-origin: top right;
