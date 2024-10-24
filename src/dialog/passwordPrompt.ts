@@ -11,18 +11,16 @@
  * @param options.minLength パスワードの必須文字数。省略時は5
  * @returns {Promise<string>} 入力されたパスワード
  */
-async function passwordPrompt(options: {minLength?: number} = {}) {
-  const {minLength = 5} = options;
-  // 自動生成したパスワード
-  const randomPassword = Math.random().toString(36).slice(2);
+async function passwordPrompt(
+  options: {minLength?: number; automatic?: boolean} = {}
+) {
+  const {minLength = 5, automatic = true} = options;
   const dlg = dialog({
     classList: 'password-prompt',
   })/* html */ `
     <label></label>
     <div>
-      <input required
-            minLength="${minLength}"
-            value="${randomPassword}"/>
+      <input type="password" required minLength="${minLength}"/>
       <label>
         <svg
             width="1em"
@@ -38,23 +36,30 @@ async function passwordPrompt(options: {minLength?: number} = {}) {
           <path d="m2 12c2 4 6 7 10 7c4 0 8-3 10-7c-2-4-6-7-10-7c-4 0-8 3-10 7Z"/>
           <line x1="4" x2="20" y1="20" y2="4"/>
         </svg>
-        <input type="checkbox" checked/>
+        <input type="checkbox"/>
       </label>
     </div>
     <summary></summary>
     <button></button>
   `;
-  const input = dlg.querySelector('input:not([type])')!;
+  const input = dlg.querySelector('input[type=password]')!;
   const checkbox = dlg.querySelector('input[type=checkbox]')!;
-  input.addEventListener(
-    'input',
-    () => {
-      // 初回だけ入力があればパスワードフィールドに変える
-      input.type = 'password';
-      checkbox.checked = false;
-    },
-    {once: true}
-  );
+  if (automatic) {
+    // 自動生成したパスワード
+    input.value = Math.random().toString(36).slice(2);
+    // パスワードを自動生成するときは最初から通常のテキストフィールドにする
+    input.type = 'text';
+    checkbox.checked = true;
+    input.addEventListener(
+      'input',
+      () => {
+        // パスワードを自動生成したときは、初回の入力でパスワードフィールドに変える
+        input.type = 'password';
+        checkbox.checked = false;
+      },
+      {once: true}
+    );
+  }
   checkbox.addEventListener('change', () => {
     // 目のアイコンをクリックすることでパスワード入力フィールドと通常のテキストフィールドを切り替える
     input.type = checkbox.checked ? 'text' : 'password';
