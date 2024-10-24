@@ -943,11 +943,16 @@ async function prepareEditor(root: HTMLDivElement) {
           'ol',
           'li',
           'div',
+          'img',
         ].includes(e.localName) ||
         // https以外へのリンクは除去
         (e.localName === 'a' &&
           (!e.hasAttribute('href') ||
-            !e.getAttribute('href')?.startsWith('https://')))
+            !e.getAttribute('href')?.startsWith('https://'))) ||
+        // dataスキーム以外の画像は除去
+        (e.localName === 'img' &&
+          (!e.hasAttribute('src') ||
+            !e.getAttribute('src')?.startsWith('data:')))
       ) {
         e.replaceWith(...e.childNodes);
         continue;
@@ -967,11 +972,44 @@ async function prepareEditor(root: HTMLDivElement) {
         e.setAttribute('rel', 'nofollow noopener noreferrer');
         continue;
       }
+      if (e.localName === 'img') {
+        // src/width/height以外の属性は除去
+        for (const a of e.attributes) {
+          if (!['src', 'width', 'height'].includes(a.name)) {
+            e.removeAttribute(a.name);
+          }
+        }
+        // スタイル指定は除去
+        e.removeAttribute('style');
+        continue;
+      }
+      if (
+        e.localName === 'div' &&
+        e.parentElement !== source &&
+        e.parentElement?.localName === 'div'
+      ) {
+        if (!e.previousSibling) {
+          // eが先頭なら親の前に
+          e.parentElement.before(e);
+        } else if (!e.nextSibling) {
+          // eが末尾なら親の後ろに
+          e.parentElement.after(e);
+        } else {
+          // eの後ろを新しい要素に移してeと新しい要素を親の後ろに
+          const div = document.createElement('div');
+          div.append(...safeSiblings(e.nextSibling));
+          e.parentElement.after(e, div);
+        }
+        if (!e.parentElement.firstChild) {
+          // 親が空っぽになったら削除
+          e.parentElement.remove();
+        }
+      }
     }
     // サポート外の要素除去などにより隣接するようになったテキストノードを連結
     source.normalize();
     // ドロップ位置を取得
-    const {offset, offsetNode} = document.caretPositionFromPoint?.(
+    let {offset, offsetNode} = document.caretPositionFromPoint?.(
       ev.x,
       ev.y
     ) ?? {
@@ -989,14 +1027,21 @@ async function prepareEditor(root: HTMLDivElement) {
       ev.preventDefault();
       return;
     }
-    const caretElement = asElement(offsetNode);
+    let caretElement = asElement(offsetNode);
     if (!caretElement) {
       // ドロップ位置が要素でもテキストでもない(ことは多分ないが)ときはデフォルト処理に回す
       return;
     }
-    const pos = caretElement.childNodes.item(offset);
-    const count = source.childNodes.length;
+    let pos = caretElement.childNodes.item(offset);
+    let count = source.childNodes.length;
     if (pos) {
+      const element = asElement(pos);
+      if (element?.localName === 'br' && !element.previousSibling) {
+        // 要素の先頭のbrの前にキャレットがあったらその要素の前に挿入
+        pos = caretElement;
+        caretElement = caretElement.parentElement!;
+        offset = indexOf(caretElement.childNodes, pos) ?? 0;
+      }
       pos.before(...source.childNodes);
     } else {
       caretElement.append(...source.childNodes);
