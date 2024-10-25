@@ -238,9 +238,10 @@ function openDocumentDialog(currentDocumentId?: string) {
           await decodeHash(await keyPromise, hash);
         } catch {
           // 復号に失敗したら確認してから削除
-          if (
-            await confirmDialog('復号に失敗しました。このメモを削除しますか?')
-          ) {
+          const answer = await confirmDialog(
+            '復号に失敗しました。このメモを削除しますか?'
+          );
+          if (answer === 'yes') {
             deleteDocument(id);
             item.remove();
           }
