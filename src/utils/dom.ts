@@ -196,22 +196,28 @@ function dialog(
         // Escape以外はそのまま
         return;
       }
-      if (options?.closeable) {
-        const cancels = dialog.querySelectorAll('button[value=cancel]');
-        if ([...cancels].some(cancel => !cancel.disabled)) {
-          // キャンセルボタンが存在していずれかのキャンセルボタンが無効でなければEscapeキーを無効化しない
+      for (const cancel of dialog.querySelectorAll('button[value=cancel]')) {
+        if (!cancel.disabled) {
+          // 無効でないキャンセルボタンが存在すればEscapeキーを無効化しない
           return;
         }
       }
       // Escapeキーを無効化
       ev.preventDefault();
     });
-    const title = element('div', {classList: 'title'})`${options?.title}`;
+    const title = element('div', {
+      classList: 'title',
+      data: {title: options?.title ?? ''},
+    })``;
     dialog.append(title);
     if (options?.closeable) {
       const button = element('button', {
         properties: {value: 'cancel', tabIndex: -1, title: '閉じる'},
-      })``;
+      })/* html */ `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+          <path d="M4 4L20 20M4 20L20 4" />
+        </svg>
+      `;
       button.addEventListener('click', () => dialog.close('cancel')),
         title.append(button);
     }

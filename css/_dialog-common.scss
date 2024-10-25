@@ -22,15 +22,21 @@ dialog {
     flex-flow: row;
     justify-content: space-between;
     align-items: flex-start;
-  }
-
-  button[value='cancel'] {
-    width: 2.4em;
-    height: 2.4em;
-    background-color: transparent;
-    border-radius: 50%;
-    &::after {
-      content: '❌';
+    //
+    &::before {
+      content: attr(data-title);
+    }
+    button[value='cancel'] {
+      width: 2.4em;
+      height: 2.4em;
+      background-color: transparent;
+      border-radius: 50%;
+      &:first-child {
+        justify-self: flex-end;
+      }
+      &:hover {
+        @include darkOrLight(background-color, 'button-background');
+      }
     }
   }
 

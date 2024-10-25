@@ -4,14 +4,20 @@ dialog.confirm {
   }
   .buttons {
     display: flex;
-  }
-  button {
-    margin-right: 10px;
-    &[value='yes']::before {
-      content: 'はい';
-    }
-    &[value='no']::before {
-      content: 'いいえ';
+    button {
+      margin-right: 10px;
+      &[value='yes']:empty::before {
+        content: 'はい';
+      }
+      &[value='no']:empty::before {
+        content: 'いいえ';
+      }
+      &[value='ok']:empty::before {
+        content: 'OK';
+      }
+      &[value='cancel']:empty::before {
+        content: 'キャンセル';
+      }
     }
   }
 }
