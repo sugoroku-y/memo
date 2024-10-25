@@ -31,11 +31,7 @@ async function applyHash(root: HTMLDivElement) {
     }
   } else {
     root.innerHTML = html/* html */ `
-      <h1>
-        ${`# ${formatDate(
-          localStorage.getItem('title-format') ?? '[YYYY-MM-DD hh:mm] "memo"'
-        )}`}
-      </h1>
+      <h1>${`# ${formatDate(configuration.titleFormat)}`}</h1>
       <div><br /></div>
     `;
     const br = root.querySelector('br')!;

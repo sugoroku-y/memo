@@ -2,7 +2,10 @@
  * localStorageに保存したキーがあればそちらを、なければキーを生成
  */
 const keyPromise = (async () => {
-  if (localStorage.getItem('use-public-key-method') === 'true') {
+  await new Promise<void>(resolve =>
+    window.addEventListener('DOMContentLoaded', () => resolve())
+  );
+  if (configuration.usePublicKeyMethod) {
     const saved = localStorage.getItem('crypto-key-pair');
     if (saved) {
       return importKeyPair(saved);
@@ -21,9 +24,6 @@ const keyPromise = (async () => {
   if (saved) {
     return importKey(saved);
   }
-  await new Promise<void>(resolve =>
-    window.addEventListener('load', () => resolve())
-  );
   const password = await passwordPrompt();
   const key = await generateKey(password);
   const oldKeyPair = localStorage.getItem('crypto-key-pair');
