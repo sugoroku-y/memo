@@ -1,13 +1,9 @@
 dialog.settings {
   @include title('設定');
-  position: absolute;
-  top: 0;
-  right: 0;
   width: fit-content;
   height: fit-content;
   @include darkOrLight(color, 'foreground');
   @include darkOrLight(background-color, 'background');
-  margin: 0 0 auto auto;
   padding: 0.5em;
   border-radius: 1em;
   > form {
