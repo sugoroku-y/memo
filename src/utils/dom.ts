@@ -112,11 +112,25 @@ function html(template: TemplateStringsArray, ...values: unknown[]): string {
   );
 }
 
+type Equal<A, B> = (<T>() => T extends A ? 1 : 0) extends <T>() => T extends B
+  ? 1
+  : 0
+  ? true
+  : false;
+type IsReadonly<T, K extends keyof T> = Equal<Pick<T, K>, Readonly<Pick<T, K>>>;
+
 interface ElementOptions<N extends keyof HTMLElementTagNameMap> {
   classList?: string | string[];
   data?: Record<string, string>;
   attributes?: Record<string, string>;
-  properties?: Partial<HTMLElementTagNameMap[N]>;
+  properties?: {
+    [Key in keyof HTMLElementTagNameMap[N] as IsReadonly<
+      HTMLElementTagNameMap[N],
+      Key
+    > extends true
+      ? never
+      : Key]?: HTMLElementTagNameMap[N][Key];
+  };
   listeners?: {
     [Type in keyof HTMLElementEventMap]?:
       | ((ev: HTMLElementEventMap[Type]) => void)
