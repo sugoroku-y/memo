@@ -14,7 +14,7 @@ async function applyHash(root: HTMLDivElement) {
       );
       if (answer === 'yes') {
         // パスワードをリセットしてリロード
-        resetKey();
+        configuration.resetCryptoKey();
       }
       // 新しいメモを開く
       openHash();
