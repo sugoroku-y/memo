@@ -60,8 +60,8 @@ function openDocumentDialog(currentDocumentId?: string) {
             // ホバーしている項目内での移動では何もしない
             return;
           }
-          // フォーカスを放棄
-          focusButton.blur();
+          // フォーカスをダイアログに移す
+          dlg.focus();
         },
         true,
       ],

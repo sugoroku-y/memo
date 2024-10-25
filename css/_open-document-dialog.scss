@@ -2,6 +2,9 @@ dialog.open-document {
   @include title('保存したメモを開く');
   width: 80%;
   height: 80%;
+  &:focus-visible {
+    outline: none;
+  }
   div.list {
     width: 100%;
     height: 100%;
