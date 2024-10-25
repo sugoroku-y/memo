@@ -102,6 +102,10 @@ function html(template: TemplateStringsArray, ...values: unknown[]): string {
         if (done) {
           break;
         }
+        if (value == null) {
+          // nullやundefinedは無視
+          continue;
+        }
         yield entityize(String(value));
       }
     })()
@@ -113,6 +117,14 @@ interface ElementOptions<N extends keyof HTMLElementTagNameMap> {
   data?: Record<string, string>;
   attributes?: Record<string, string>;
   properties?: Partial<HTMLElementTagNameMap[N]>;
+  listeners?: {
+    [Type in keyof HTMLElementEventMap]?:
+      | ((ev: HTMLElementEventMap[Type]) => void)
+      | [
+          (ev: HTMLElementEventMap[Type]) => void,
+          boolean | AddEventListenerOptions
+        ];
+  };
 }
 
 function element<N extends keyof HTMLElementTagNameMap>(
@@ -143,6 +155,18 @@ function element<N extends keyof HTMLElementTagNameMap>(
         e[name as keyof typeof e] = value;
       }
     }
+    if (options?.listeners) {
+      for (const [type, listener] of Object.entries(options.listeners)) {
+        const rest: [
+          listener: EventListener,
+          options?: boolean | AddEventListenerOptions
+        ] =
+          typeof listener === 'function'
+            ? [listener as EventListener]
+            : (listener as [EventListener, boolean | AddEventListenerOptions]);
+        e.addEventListener(type, ...rest);
+      }
+    }
     e.innerHTML = html(...args);
     return e;
   };
@@ -153,38 +177,31 @@ function dialog(
 ) {
   return (...args: [TemplateStringsArray, ...unknown[]]) => {
     const dialog = element('dialog', options)``;
-    const title = element('div', {classList: 'title'})`${options?.title ?? ''}`;
-    dialog.append(title);
-    dialog.append(element('form', {properties: {method: 'dialog'}})(...args));
-    if (options?.closeable) {
-      const cancel = element('button', {
-        properties: {value: 'cancel', tabIndex: -1, title: '閉じる'},
-      })``;
-      cancel.addEventListener('click', () => dialog.close('cancel'));
-      title.append(cancel);
-    }
-    dialog.addEventListener('close', () => {
-      dialog.remove();
-    });
-    dialog.addEventListener(
-      'keydown',
-      ev => {
-        if (ev.key !== 'Escape') {
-          // Escape以外はそのまま
+    dialog.addEventListener('keydown', ev => {
+      if (ev.key !== 'Escape') {
+        // Escape以外はそのまま
+        return;
+      }
+      if (options?.closeable) {
+        const cancels = dialog.querySelectorAll('button[value=cancel]');
+        if ([...cancels].some(cancel => !cancel.disabled)) {
+          // キャンセルボタンが存在していずれかのキャンセルボタンが無効でなければEscapeキーを無効化しない
           return;
         }
-        if (options?.closeable) {
-          const cancels = dialog.querySelectorAll('button[value=cancel]');
-          if ([...cancels].some(cancel => !cancel.disabled)) {
-            // キャンセルボタンが存在していずれかのキャンセルボタンが無効でなければEscapeキーを無効化しない
-            return;
-          }
-        }
-        // Escapeキーを無効化
-        ev.preventDefault();
-      },
-      true
-    );
+      }
+      // Escapeキーを無効化
+      ev.preventDefault();
+    });
+    const title = element('div', {classList: 'title'})`${options?.title}`;
+    dialog.append(title);
+    if (options?.closeable) {
+      const button = element('button', {
+        properties: {value: 'cancel', tabIndex: -1, title: '閉じる'},
+      })``;
+      button.addEventListener('click', () => dialog.close('cancel')),
+        title.append(button);
+    }
+    dialog.append(element('form', {properties: {method: 'dialog'}})(...args));
     return dialog;
   };
 }
@@ -195,6 +212,7 @@ function showModal(dialog: HTMLDialogElement) {
   return new Promise<string>(resolve => {
     dialog.addEventListener('close', () => {
       resolve(dialog.returnValue);
+      dialog.remove();
     });
   });
 }

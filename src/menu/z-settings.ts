@@ -37,8 +37,46 @@ window.addEventListener('DOMContentLoaded', () => {
     },
   };
 
-  const settings = element('button', {
+  menu.append(element('button', {
     properties: {id: 'settings', tabIndex: -1, title: '設定'},
+    listeners: {
+      click: () => {
+        const settings = dialog({
+          classList: 'settings',
+          closeable: true,
+        })/*html*/ `
+          <label>初期タイトル</label><input />
+          <label><input type="checkbox">公開鍵暗号を使う</label>
+        `;
+        const titleFormatField = settings.querySelector('input:not([type])')!;
+        const usePublicKeyMethodCheckbox = settings.querySelector(
+          'label > input[type=checkbox]'
+        )!;
+        titleFormatField.value = configuration.titleFormat;
+        titleFormatField.addEventListener('change', () => {
+          configuration.titleFormat = titleFormatField.value;
+        });
+        usePublicKeyMethodCheckbox.checked = configuration.usePublicKeyMethod;
+        usePublicKeyMethodCheckbox.addEventListener('change', () => {
+          if (
+            !configuration.updateUsePublicKeyMethod(
+              usePublicKeyMethodCheckbox.checked
+            )
+          ) {
+            return;
+          }
+          (async () => {
+            const answer = await confirmDialog(
+              '再起動するまで設定は反映されません。再起動しますか?'
+            );
+            if (answer === 'yes') {
+              location.href = location.pathname;
+            }
+          })();
+        });
+        showModal(settings);
+      },
+    },
   })/* html */ `
     <svg xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
@@ -50,42 +88,5 @@ window.addEventListener('DOMContentLoaded', () => {
       <circle cx="12" cy="12" r="5"/>
       <path d="M1 12l1.1 4.8a2.7 2.7 0 0 1 3.1 3.8l4.4 2.1a2.7 2.7 0 0 1 4.9 0l4.4 -2.1a2.7 2.7 0 0 1 3.1 -3.8l1.1 -4.8a2.7 2.7 0 0 1 -1.1 -4.8l-3.1 -3.8a2.7 2.7 0 0 1 -4.4 -2.1l-4.9 -0a2.7 2.7 0 0 1 -4.4 2.1l-3.1 3.8a2.7 2.7 0 0 1 -1.1 4.8"/>
     </svg>
-  `;
-  menu.append(settings);
-  settings.addEventListener('click', () => {
-    const settings = dialog({
-      classList: 'settings',
-      closeable: true,
-    })/*html*/ `
-      <label>初期タイトル</label><input />
-      <label><input type="checkbox">公開鍵暗号を使う</label>
-    `;
-    const titleFormatField = settings.querySelector('input:not([type])')!;
-    const usePublicKeyMethodCheckbox = settings.querySelector(
-      'label > input[type=checkbox]'
-    )!;
-    titleFormatField.value = configuration.titleFormat;
-    titleFormatField.addEventListener('change', () => {
-      configuration.titleFormat = titleFormatField.value;
-    });
-    usePublicKeyMethodCheckbox.checked = configuration.usePublicKeyMethod;
-    usePublicKeyMethodCheckbox.addEventListener('change', () => {
-      if (
-        !configuration.updateUsePublicKeyMethod(
-          usePublicKeyMethodCheckbox.checked
-        )
-      ) {
-        return;
-      }
-      (async () => {
-        const answer = await confirmDialog(
-          '再起動するまで設定は反映されません。再起動しますか?'
-        );
-        if (answer === 'yes') {
-          location.href = location.pathname;
-        }
-      })();
-    });
-    showModal(settings);
-  });
+  `);
 });

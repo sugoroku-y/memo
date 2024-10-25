@@ -16,6 +16,94 @@ function openDocumentDialog(currentDocumentId?: string) {
     classList: 'open-document',
     // メモを開いていない状態のときは閉じるボタン、Escapeキーで閉じないようにする
     closeable: currentDocumentId != null,
+    listeners: {
+      // ホバーでフォーカスが移動するようにしておく
+      pointerenter: [
+        ev => {
+          const target = ev.target as HTMLElement;
+          const button = target.closest('button');
+          if (button && button.tabIndex >= 0) {
+            // フォーカスを持つボタンならフォーカス移動して終わり
+            button.focus();
+            return;
+          }
+          const item = target.closest('.list div.list-item');
+          if (!item) {
+            // ボタンでも項目でもなければ何もしない
+            return;
+          }
+          const focusedItem = document.activeElement?.closest(
+            '.list div.list-item'
+          );
+          if (focusedItem === item) {
+            // ホバーされたのがフォーカスのある項目なら何もしない
+            return;
+          }
+          // 項目内のボタンにフォーカスを移動
+          item.querySelector('button')?.focus();
+        },
+        true,
+      ],
+      pointerleave: [
+        ev => {
+          const focusButton = document.activeElement?.closest('button');
+          if (!focusButton) {
+            // ボタンがフォーカスを持っていなければ何もしない
+            return;
+          }
+          const target = ev.target as HTMLElement;
+          const item = target.closest('.list div.list-item');
+          const hoverItem = (ev.relatedTarget as HTMLElement)?.closest(
+            '.list div.list-item'
+          );
+          if (item && item === hoverItem) {
+            // ホバーしている項目内での移動では何もしない
+            return;
+          }
+          // フォーカスを放棄
+          focusButton.blur();
+        },
+        true,
+      ],
+      keydown: ev => {
+        switch (
+          `${ev.key.length > 1 && ev.shiftKey ? 'shift+' : ''}${
+            ev.ctrlKey ? 'ctrl+' : ''
+          }${ev.altKey ? 'alt+' : ''}${ev.key}`
+        ) {
+          case 'ArrowUp':
+            // ↑が押されたら逆順で次の項目を選択
+            selectNextItem('backword') && ev.preventDefault();
+            return;
+          case 'ArrowDown':
+            // ↓が押されたら正順で次の項目を選択
+            selectNextItem('forward') && ev.preventDefault();
+            return;
+          case 'Delete':
+            // フォーカスのある項目を削除
+            document.activeElement
+              ?.closest('div.list-item')
+              ?.querySelector('button[name=delete]')
+              ?.click();
+            return;
+          case 'alt+Enter':
+            // フォーカスのある項目を別タブで開く
+            document.activeElement
+              ?.closest('div.list-item')
+              ?.querySelector('button[name=another-tab]')
+              ?.click();
+            return;
+        }
+      },
+      close: () => {
+        if (dlg.returnValue !== 'new') {
+          // 新しいメモを開くボタン以外のsubmitは何もしないで閉じる
+          return;
+        }
+        // 新しいメモを開く
+        openHash();
+      },
+    },
   })/*html*/ `
     <div class="list">
       <div class="list-item-header">
@@ -70,56 +158,9 @@ function openDocumentDialog(currentDocumentId?: string) {
     reloadList();
   });
   const footer = list.lastElementChild as HTMLDivElement;
-  // ホバーでフォーカスが移動するようにしておく
-  dlg.addEventListener(
-    'pointerenter',
-    ev => {
-      const target = ev.target as HTMLElement;
-      const button = target.closest('button');
-      if (button && button.tabIndex >= 0) {
-        // フォーカスを持つボタンならフォーカス移動して終わり
-        button.focus();
-        return;
-      }
-      const item = target.closest('.list div.list-item');
-      if (!item) {
-        // ボタンでも項目でもなければ何もしない
-        return;
-      }
-      const focusedItem = document.activeElement?.closest(
-        '.list div.list-item'
-      );
-      if (focusedItem === item) {
-        // ホバーされたのがフォーカスのある項目なら何もしない
-        return;
-      }
-      // 項目内のボタンにフォーカスを移動
-      item.querySelector('button')?.focus();
-    },
-    true
-  );
-  dlg.addEventListener(
-    'pointerleave',
-    ev => {
-      const focusButton = document.activeElement?.closest('button');
-      if (!focusButton) {
-        // ボタンがフォーカスを持っていなければ何もしない
-        return;
-      }
-      const target = ev.target as HTMLElement;
-      const item = target.closest('.list div.list-item');
-      const hoverItem = (ev.relatedTarget as HTMLElement)?.closest(
-        '.list div.list-item'
-      );
-      if (item && item === hoverItem) {
-        // ホバーしている項目内での移動では何もしない
-        return;
-      }
-      // フォーカスを放棄
-      focusButton.blur();
-    },
-    true
-  );
+  reloadList();
+  showModal(dlg);
+
   async function reloadList() {
     for (const item of list.querySelectorAll('div.list-item')) {
       item.remove();
@@ -132,7 +173,49 @@ function openDocumentDialog(currentDocumentId?: string) {
         // 開いているメモはリストから除外
         continue;
       }
-      const item = element('div', {classList: 'list-item'})/* html */ `
+      const item = element('div', {
+        classList: 'list-item',
+        listeners: {
+          click: ev => {
+            const button = (ev.target as HTMLElement).closest('button');
+            switch (button?.name) {
+              case 'another-tab':
+                (async () => {
+                  // 別タブで開く
+                  const hash = await load();
+                  if (hash) {
+                    window.open(`${location.pathname}#${hash}`, '_blank');
+                  }
+                })();
+                break;
+              case 'delete':
+                (async () => {
+                  // 削除
+                  const answer = await confirmDialog(
+                    `${title}を削除します。\nよろしいですか?`
+                  );
+                  if (answer === 'no') {
+                    // いいえが選択されたら何もしない
+                    return;
+                  }
+                  await deleteDocument(id);
+                  item.remove();
+                })();
+                break;
+              default:
+                // 項目内のボタン以外をクリックしても開くボタンを押したことにして選択したメモを開く
+                (async () => {
+                  const hash = await load();
+                  if (hash) {
+                    openHash(hash);
+                    dlg.close();
+                  }
+                })();
+                return;
+            }
+          },
+        },
+      })/* html */ `
           <div class="list-item-title" title="${title}">${title}</div>
           <div class="list-item-size">${
             // メモのサイズ(圧縮・暗号化後)
@@ -165,54 +248,16 @@ function openDocumentDialog(currentDocumentId?: string) {
         }
         return hash;
       };
-      item.addEventListener('click', ev => {
-        const button = (ev.target as HTMLElement).closest('button');
-        switch (button?.name) {
-          case 'another-tab':
-            (async () => {
-              // 別タブで開く
-              const hash = await load();
-              if (hash) {
-                window.open(`${location.pathname}#${hash}`, '_blank');
-              }
-            })();
-            break;
-          case 'delete':
-            (async () => {
-              // 削除
-              const answer = await confirmDialog(
-                `${title}を削除します。\nよろしいですか?`
-              );
-              if (answer === 'no') {
-                // いいえが選択されたら何もしない
-                return;
-              }
-              await deleteDocument(id);
-              item.remove();
-            })();
-            break;
-          default:
-            // 項目内のボタン以外をクリックしても開くボタンを押したことにして選択したメモを開く
-            (async () => {
-              const hash = await load();
-              if (hash) {
-                openHash(hash);
-                dlg.close();
-              }
-            })();
-            return;
-        }
-      });
       footer.before(item);
     }
     list.querySelector('button')?.focus();
   }
-  reloadList();
+
   /**
    * 選択項目の次を選択する
    * @param direction 次の方向を指定する
    */
-  const selectNextItem = (direction: 'forward' | 'backword') => {
+  function selectNextItem(direction: 'forward' | 'backword') {
     const selected = document.activeElement?.closest(`.list div.list-item`);
     const item = selected
       ? // 選択している項目があればその次の項目を選択
@@ -228,44 +273,5 @@ function openDocumentDialog(currentDocumentId?: string) {
     // 項目内の先頭のボタンにフォーカスを移す
     item.querySelector('button')?.focus();
     return true;
-  };
-  dlg.addEventListener('keydown', ev => {
-    switch (
-      `${ev.key.length > 1 && ev.shiftKey ? 'shift+' : ''}${
-        ev.ctrlKey ? 'ctrl+' : ''
-      }${ev.altKey ? 'alt+' : ''}${ev.key}`
-    ) {
-      case 'ArrowUp':
-        // ↑が押されたら逆順で次の項目を選択
-        selectNextItem('backword') && ev.preventDefault();
-        return;
-      case 'ArrowDown':
-        // ↓が押されたら正順で次の項目を選択
-        selectNextItem('forward') && ev.preventDefault();
-        return;
-      case 'Delete':
-        // フォーカスのある項目を削除
-        document.activeElement
-          ?.closest('div.list-item')
-          ?.querySelector('button[name=delete]')
-          ?.click();
-        return;
-      case 'alt+Enter':
-        // フォーカスのある項目を別タブで開く
-        document.activeElement
-          ?.closest('div.list-item')
-          ?.querySelector('button[name=another-tab]')
-          ?.click();
-        return;
-    }
-  });
-  dlg.addEventListener('close', ev => {
-    if (dlg.returnValue !== 'new') {
-      // 新しいメモを開くボタン以外のsubmitは何もしないで閉じる
-      return;
-    }
-    // 新しいメモを開く
-    openHash();
-  });
-  showModal(dlg);
+  }
 }

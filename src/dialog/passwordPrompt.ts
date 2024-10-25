@@ -17,6 +17,12 @@ async function passwordPrompt(
   const {minLength = 5, automatic = true} = options;
   const dlg = dialog({
     classList: 'password-prompt',
+    listeners: {
+      submit: () => {
+        // submitできたらパスワードを返す
+        dlg.close(input.value);
+      },
+    },
   })/* html */ `
     <label></label>
     <div>
@@ -63,10 +69,6 @@ async function passwordPrompt(
   checkbox.addEventListener('change', () => {
     // 目のアイコンをクリックすることでパスワード入力フィールドと通常のテキストフィールドを切り替える
     input.type = checkbox.checked ? 'text' : 'password';
-  });
-  // submitできたらパスワードを返す
-  dlg.addEventListener('submit', () => {
-    dlg.close(input.value);
   });
   // ダイアログを開いたときに自動生成したパスワードを選択状態にする
   input.select();
