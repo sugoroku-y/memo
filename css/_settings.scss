@@ -23,8 +23,8 @@ dialog.settings {
       grid-column: 2/-1;
       border: none;
     }
-    > button:last-of-type {
-      grid-column: -2;
+    > button {
+      grid-column: 2/-1;
     }
   }
 }

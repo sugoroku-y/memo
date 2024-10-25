@@ -6,9 +6,29 @@ window.addEventListener('DOMContentLoaded', () => {
         const settings = dialog({
           classList: 'settings',
           closeable: true,
+          listeners: {
+            click(ev) {
+              if ((ev.target as HTMLButtonElement).name === 'key-reset') {
+                (async () => {
+                  const answer = await confirmDialog(
+                    `${
+                      configuration.usePublicKeyMethod ? '共通鍵' : 'パスワード'
+                    }をリセットして再読込しますか?`
+                  );
+                  if (answer === 'yes') {
+                    configuration.resetCryptoKey();
+                  }
+                })();
+                return;
+              }
+            },
+          },
         })/*html*/ `
           <label>初期タイトル</label><input />
           <label><input type="checkbox">公開鍵暗号を使う</label>
+          <button type="button" name="key-reset">${
+            configuration.usePublicKeyMethod ? '共通鍵' : 'パスワード'
+          }のリセット</button>
         `;
         const titleFormatField = settings.querySelector('input:not([type])')!;
         const usePublicKeyMethodCheckbox = settings.querySelector(
