@@ -27,48 +27,43 @@ async function passwordPrompt(
     <label></label>
     <div>
       <input type="password" required minLength="${minLength}"/>
-      <label>
-        <svg
-            width="1em"
-            height="1em"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            xmlns="http://www.w3.org/2000/svg">
-          <circle cx="12" cy="12" r="3"/>
-          <path d="m2 12c2 4 6 7 10 7c4 0 8-3 10-7c-2-4-6-7-10-7c-4 0-8 3-10 7Z"/>
-          <line x1="4" x2="20" y1="20" y2="4"/>
-        </svg>
-        <input type="checkbox"/>
-      </label>
+      <svg
+          width="1em"
+          height="1em"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          xmlns="http://www.w3.org/2000/svg">
+        <path d="m12 8a4 4 0 1 0 4 4a4 4 0 0 0-4-4zm0 1a3 3 0 0 1 3 3a1 1 0 0 1-2 0a1 1 0 0 0-1-1a1 1 0 0 1 0-2z" fill="currentColor" stroke="none"/>
+        <path d="m2 12c2 4 6 7 10 7c4 0 8-3 10-7c-2-4-6-7-10-7c-4 0-8 3-10 7Z"/>
+        <line x1="4" x2="20" y1="20" y2="4"/>
+      </svg>
     </div>
     <summary></summary>
     <button></button>
   `;
-  const input = dlg.querySelector('input[type=password]')!;
-  const checkbox = dlg.querySelector('input[type=checkbox]')!;
+  const input = dlg.querySelector('div > input[type=password]')!;
+  const svg = input.nextElementSibling!;
   if (automatic) {
     // 自動生成したパスワード
     input.value = Math.random().toString(36).slice(2);
     // パスワードを自動生成するときは最初から通常のテキストフィールドにする
-    input.type = 'text';
-    checkbox.checked = true;
+    input.removeAttribute('type'); // 目のアイコンを非表示にするため属性自体を消す
     input.addEventListener(
       'input',
       () => {
         // パスワードを自動生成したときは、初回の入力でパスワードフィールドに変える
         input.type = 'password';
-        checkbox.checked = false;
       },
       {once: true}
     );
   }
-  checkbox.addEventListener('change', () => {
+  svg.addEventListener('click', () => {
     // 目のアイコンをクリックすることでパスワード入力フィールドと通常のテキストフィールドを切り替える
-    input.type = checkbox.checked ? 'text' : 'password';
+    input.type = input.type === 'password' ? 'text' : 'password';
   });
   // ダイアログを開いたときに自動生成したパスワードを選択状態にする
   input.select();
