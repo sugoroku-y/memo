@@ -78,13 +78,7 @@ window.addEventListener('DOMContentLoaded', () => {
       },
     },
   })/* html */ `
-    <svg xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="5"/>
       <path d="M1 12l1.1 4.8a2.7 2.7 0 0 1 3.1 3.8l4.4 2.1a2.7 2.7 0 0 1 4.9 0l4.4 -2.1a2.7 2.7 0 0 1 3.1 -3.8l1.1 -4.8a2.7 2.7 0 0 1 -1.1 -4.8l-3.1 -3.8a2.7 2.7 0 0 1 -4.4 -2.1l-4.9 -0a2.7 2.7 0 0 1 -4.4 2.1l-3.1 3.8a2.7 2.7 0 0 1 -1.1 4.8"/>
     </svg>
