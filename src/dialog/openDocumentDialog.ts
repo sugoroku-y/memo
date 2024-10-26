@@ -226,9 +226,21 @@ function openDocumentDialog(currentDocumentId?: string) {
             formatDate('YYYY-MM-DD hh:mm', lastModified)
           }</div>
           <div class="list-item-buttons">
-            <button type="button" name="open" title="開く" autofocus></button>
-            <button type="button" name="another-tab" title="別タブで開く"></button>
-            <button type="button" name="delete" title="削除"></button>
+            <button type="button" name="open" title="開く" autofocus>
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M2 18v-14a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2h-14m-2-2l14-14v4m0-4h-4"/>
+              </svg>
+            </button>
+            <button type="button" name="another-tab" title="別タブで開く">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 18v-14a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v11m0 5a2 2 0 0 1-2 2m-5 0h-9m-2-2l14-14v4m0-4h-4M17.5 17.5m-4.5 0h10m-5.5-4.5v10"/>
+              </svg>
+            </button>
+            <button type="button" name="delete" title="削除">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 10l3 11a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l3-11m3-2l-18-6 m7.5 2.5a1 1 0 0 1 3 1m-14 2a7 14 0 0 1 10 7l2-2m-2 2l-3-1"/>
+              </svg>
+            </button>
           </div>
         `;
       const load = async () => {

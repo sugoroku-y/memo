@@ -56,29 +56,6 @@ dialog.open-document {
       transition: opacity 1s;
       background-color: transparent;
     }
-    button[name='another-tab'] {
-      position: relative;
-      &::before {
-        content: '▶';
-      }
-      &::after {
-        content: '➕';
-        display: block;
-        position: absolute;
-        bottom: 0.3em;
-        left: 0.9em;
-      }
-    }
-    button[name='open'] {
-      &::after {
-        content: '▶';
-      }
-    }
-    button[name='delete'] {
-      &::after {
-        content: '\01f5d1\0fe0f';
-      }
-    }
   }
   .list-item-title,
   .list-item-size,
