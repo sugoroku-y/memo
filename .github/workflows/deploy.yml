@@ -23,7 +23,7 @@ jobs:
           mkdir data/css
           cp css/*.css data/css/
           cp manifest.json data/
-          cp memo-pencil-svgrepo-com.svg data/
+          cp icon.svg data/
       - uses: actions/upload-pages-artifact@v1
         with:
           path: data/

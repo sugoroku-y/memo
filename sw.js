@@ -12,7 +12,7 @@
     './',
     './js/main.js',
     './css/style.css',
-    './memo-pencil-svgrepo-com.svg',
+    './icon.svg',
   ];
 
   self.addEventListener('install', event => {

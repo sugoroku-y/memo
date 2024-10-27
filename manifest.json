@@ -10,7 +10,7 @@
       "short_name": "New",
       "icons": [
         {
-          "src": "memo-pencil-svgrepo-com.svg",
+          "src": "icon.svg",
           "sizes": "192x192"
         }
       ],
@@ -21,7 +21,7 @@
       "short_name": "Open",
       "icons": [
         {
-          "src": "memo-pencil-svgrepo-com.svg",
+          "src": "icon.svg",
           "sizes": "192x192"
         }
       ],
@@ -30,7 +30,7 @@
   ],
   "icons": [
     {
-      "src": "memo-pencil-svgrepo-com.svg",
+      "src": "icon.svg",
       "sizes": "192x192"
     }
   ]
