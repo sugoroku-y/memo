@@ -112,7 +112,11 @@ function openDocumentDialog(currentDocumentId?: string) {
         <div class="list-item-last-modified">最終更新日時</div>
       </div>
       <div class="list-item-footer">
-        <button value="new" title="新しいメモ(N)" accesskey="N"></button>
+        <button value="new" title="新しいメモ(N)" accesskey="N">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M12 22h-6a2 2 0 0 1-2-2v-16a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v6m-12-3h8m-8 5h7m-7 5h4m1 1h10m-5-5v10" />
+          </svg>
+        </button>
       </div>
     </div>
   `;

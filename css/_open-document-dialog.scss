@@ -151,6 +151,8 @@ dialog.open-document {
   }
   // 新しいメモボタンの位置揃え
   div.list-item-footer {
+    // 項目と重なっていたときには邪魔しないように
+    pointer-events: none;
     // メモの数がリストに対して少ないときでも下辺に揃える
     flex-grow: 1;
     display: flex;
@@ -174,12 +176,16 @@ dialog.open-document {
   }
   button[value='new'] {
     @include darkOrLight(background-color, 'list');
-    line-height: 140%;
-    font-size: xxx-large;
     border-radius: 50%;
-    padding: 0;
-    &::after {
-      content: '➕';
+    padding: 0.5em;
+    width: 5em;
+    height: 5em;
+    opacity: 40%;
+    &:has(:hover) {
+      opacity: 1;
+    }
+    * {
+      pointer-events: auto;
     }
   }
 }
