@@ -60,8 +60,9 @@ window.addEventListener('DOMContentLoaded', () => {
       },
     },
   })/* html */ `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-      <path d="M0 12a3.0 3.0 0 0 1 1.2 5.2l3.3 4.2a3.0 3.0 0 0 1 4.8 2.3l5.3 0a3.0 3.0 0 0 1 4.8 -2.3l3.3 -4.2a3.0 3.0 0 0 1 1.2 -5.2l-1.2 -5.2a3.0 3.0 0 0 1 -3.3 -4.2l-4.8 -2.3a3.0 3.0 0 0 1 -5.3 -0l-4.8 2.3a3.0 3.0 0 0 1 -3.3 4.2zM12 6a6 6 0 0 0 0 12a6 6 0 0 0 0-12" fill="currentColor" stroke="none" fill-rule="evenodd"/>
-    </svg>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <path d="M1 50a49 49 0 0 0 2 13l11 2a39 39 0 0 0 7 11l-2 11a49 49 0 0 0 12 7l9-7a39 39 0 0 0 13 1l8 9a49 49 0 0 0 13-5l-0-12a39 39 0 0 0 9-10l12-0a49 49 0 0 0 4-13l-9-7a39 39 0 0 0-2-13l7-9a49 49 0 0 0-7-11l-11 3a39 39 0 0 0-12-7l-3-11a49 49 0 0 0-13-1l-5 11a39 39 0 0 0-13 5l-11-5a49 49 0 0 0-9 10l5 10a39 39 0 0 0-4 13zM50 25a25 25 0 0 0 0 50a25 25 0 0 0 0-50" fill="currentColor" stroke="none" fill-rule="evenodd"/>
+  </svg>
   `);
+  // https://www.typescriptlang.org/ja/play/?target=99&jsx=0#code/MYewdgzgLgBA7jAvDAjABjQGgLACgYEwC2SqAzDvoWKQOwDceoksATqQgPQwBMMAtKkqEYwAB4cY3HsMLAAnpOmyCrPsgCyAQygALAHSsQAVzAATABSsAVABZOAVgCUKmKzKltewyfNWpvE6MuAA2AKawEshYeCKK0a7ApADkGsmuZinJwQBmIOwW4bAAlqRo9DClADwwYBUA1PXFTjAA3rGE7VQiBMzQMGZhAOakFl4GAAoAkjDWvLOVLdxgrj3UUaISguP6oBAWg0Mtc6yra7Xxoor1MDsQxWAHw8duwecDMPXISTdmZgAGABJWmAtjAxABfGDAsCKQTyCH-N7nDag5FrS6w9EwCEdAhdd59WCHUY7aYLPhzCylOYkG62JxLGAWGi0lx4961DbiAS3HQGPZPI4LU4c96w0gKT587z3R6HF6sbEiTJfAYArTA1hQrVQtAwfX6mFgyHQkFwmAIpFiwiosTKwiY+TY3HdNo23rgfok5Bjfn6clzSnMmnEaUANkZARZCyI7Ld4u5YJ2goVIpkHp6Eu+1xlBjlQsVPAdBFVyD+-xCxt5pphFqtJfBpDRmadLo5BPORIGw1J-sD8ypobpqBQUe4MbZZzWoMlyf9qee6enWcuUpudwehfTjbL6v+mtaah1R54eoNF+rglr5t5DczdsbbY5rpEwGQyRC2TwrrMaorABeGjAuIJ5SoI7gQoekFmjBhoXkaR5kNYZ7QWQJ5wQhl6tPw7goYiTBeiA4T6CEIBDAcTh4HgOSmMAUDFOA6oWFAYREAADiEOhhAAXDAAAqbGcdxADKUCsA8QwQAAgqwrBaPImAwPoKkAG5aCExhhBAfFgMYRAAEZhKwADaAC6Th8dAElgCMnaqBExisDQrEcVxrGGGEZjGMAYQWFYSlhEpzRIAAfO6CZyF6sCqaQ6madpJmlIIKBmZmrCOc5MBAq0sU1PqAD8biecJvkWJwAA6ED1ICnBKckySWdqwKqfoUAgAAYsUYheRYaBOBCwJhARboQkEP4wEAA
 });
