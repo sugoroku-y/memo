@@ -6,23 +6,6 @@ window.addEventListener('DOMContentLoaded', () => {
         const settings = dialog({
           classList: 'settings',
           closeable: true,
-          listeners: {
-            click(ev) {
-              if ((ev.target as HTMLButtonElement).name === 'key-reset') {
-                (async () => {
-                  const answer = await confirmDialog(
-                    `${
-                      configuration.usePublicKeyMethod ? '共通鍵' : 'パスワード'
-                    }をリセットして再読込しますか?`
-                  );
-                  if (answer === 'yes') {
-                    configuration.resetCryptoKey();
-                  }
-                })();
-                return;
-              }
-            },
-          },
         })/*html*/ `
           <label>初期タイトル</label><input />
           <label><input type="checkbox">公開鍵暗号を使う</label>
@@ -30,14 +13,16 @@ window.addEventListener('DOMContentLoaded', () => {
             configuration.usePublicKeyMethod ? '共通鍵' : 'パスワード'
           }のリセット</button>
         `;
+        // 初期タイトル
         const titleFormatField = settings.querySelector('input:not([type])')!;
-        const usePublicKeyMethodCheckbox = settings.querySelector(
-          'label > input[type=checkbox]'
-        )!;
         titleFormatField.value = configuration.titleFormat;
         titleFormatField.addEventListener('change', () => {
           configuration.titleFormat = titleFormatField.value;
         });
+        // 公開鍵暗号を使う
+        const usePublicKeyMethodCheckbox = settings.querySelector(
+          'label > input[type=checkbox]'
+        )!;
         usePublicKeyMethodCheckbox.checked = configuration.usePublicKeyMethod;
         usePublicKeyMethodCheckbox.addEventListener('change', () => {
           if (
@@ -56,6 +41,21 @@ window.addEventListener('DOMContentLoaded', () => {
             }
           })();
         });
+        // 共通鍵/パスワードのリセット
+        settings
+          .querySelector('button[name="key-reset"]')!
+          .addEventListener('click', () => {
+            (async () => {
+              const answer = await confirmDialog(
+                `${
+                  configuration.usePublicKeyMethod ? '共通鍵' : 'パスワード'
+                }をリセットして再読込しますか?`
+              );
+              if (answer === 'yes') {
+                configuration.resetCryptoKey();
+              }
+            })();
+          });
         showModal(settings);
       },
     },
