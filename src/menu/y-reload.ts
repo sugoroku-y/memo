@@ -8,8 +8,8 @@ window.addEventListener('DOMContentLoaded', () => {
       },
     },
   })/*html*/ `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18">
-      <path d="M4.8 3.4a7 7 0 1 0 8.4 0m0 3v-3h3" />
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+      <path d="M6.4 4.4a9 9 0 1 0 11.2 0m0 4v-4h4" />
     </svg>
   `);
 });
