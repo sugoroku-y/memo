@@ -19,27 +19,26 @@ function confirmDialog(message: string, options?: ConfirmDialogOptions) {
     <div class="message">${message}</div>
     <div class="buttons"></div>
   `;
+  // 開いたあとフォーカスを移すボタン
+  let focusee: HTMLButtonElement | undefined | null;
   dlg.querySelector('.buttons')?.append(
-    ...buttons.map(
-      value =>
-        element('button', {
-          properties: {value, tabIndex: 0},
-        })`${labels?.[value]}`
-    )
-  );
-  queueMicrotask(() => {
-    let focusee: HTMLButtonElement | undefined;
-    for (const button of dlg.querySelectorAll('.buttons button')) {
-      focusee ??= button;
-      if (!defaultValue) {
-        break;
-      }
-      if (button.value === defaultValue) {
+    ...buttons.map(value => {
+      const button = element('button', {
+        properties: {value, tabIndex: 0},
+      })`${labels?.[value]}`;
+      if (!focusee || value === defaultValue) {
+        // 先頭もしくはdefaultで指定された値と一致するボタン
         focusee = button;
-        break;
       }
-    }
-    focusee?.focus();
-  });
+      return button;
+    })
+  );
+  const target = focusee;
+  if (target) {
+    // この時点ではまだフォーカスを移せないのでちょっと後に実行
+    queueMicrotask(() => {
+      target.focus();
+    });
+  }
   return showModal(dlg);
 }
