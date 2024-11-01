@@ -31,15 +31,18 @@ async function passwordPrompt(
           width="1em"
           height="1em"
           viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M1 12a12 13 0 0 1 22 0a12 13 0 0 1-22 0m2 0a10 11 0 0 1 18 0a10 11 0 0 1-18 0m9-4a4 4 0 1 0 4 4a4 4 0 0 0-4-4m0 1a3 3 0 0 1 3 3a1 1 0 0 1-2 0a1 1 0 0 0-1-1a1 1 0 0 1 0-2"
+          fill="currentColor"
+          fill-rule="evenodd"
+          stroke="none"/>
+        <path
+          d="M4 20l16-16"
           fill="none"
           stroke="currentColor"
           stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          xmlns="http://www.w3.org/2000/svg">
-        <path d="m12 8a4 4 0 1 0 4 4a4 4 0 0 0-4-4zm0 1a3 3 0 0 1 3 3a1 1 0 0 1-2 0a1 1 0 0 0-1-1a1 1 0 0 1 0-2z" fill="currentColor" stroke="none"/>
-        <path d="m2 12c2 4 6 7 10 7c4 0 8-3 10-7c-2-4-6-7-10-7c-4 0-8 3-10 7Z"/>
-        <line x1="4" x2="20" y1="20" y2="4"/>
+          stroke-linecap="round"/>
       </svg>
     </div>
     <summary></summary>
