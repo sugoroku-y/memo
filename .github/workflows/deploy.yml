@@ -13,21 +13,21 @@ jobs:
       - uses: actions/setup-node@v4
         with:
             node-version: '20.x'
-      - name: build
-        run: |
-          npm ci
-          npm run build
+      - run: npm ci
+      - run: npm run build
+      - run: |
+          mkdir data
+          cp index.html data/
+          cp sw.js data/
+          cp -r js/ data/js
+          mkdir data/css
+          cp css/*.css data/css/
+          cp manifest.json data/
+          cp icon.svg data/
       - name: Archive production artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-pages-artifact@v3
         with:
-          path: |
-            index.html
-            sw.js
-            js/*.js
-            css/*.css
-            manifest.json
-            icon.svg
-          name: github-pages
+          path: data/
   deploy:
     needs: build
     runs-on: ubuntu-latest 
