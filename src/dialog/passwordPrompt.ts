@@ -37,12 +37,7 @@ async function passwordPrompt(
           fill="currentColor"
           fill-rule="evenodd"
           stroke="none"/>
-        <path
-          d="M4 20l16-16"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"/>
+        <path d="M4 20l16-16"/>
       </svg>
     </div>
     <summary></summary>
