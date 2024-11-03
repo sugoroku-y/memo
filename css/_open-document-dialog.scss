@@ -68,7 +68,6 @@ dialog.open-document {
     text-wrap: nowrap;
     overflow-x: hidden;
     flex: 0 0;
-    text-overflow: ellipsis;
     border-bottom: solid 1px;
     @include darkOrLight(border-bottom-color, 'emphasis');
   }
@@ -77,6 +76,11 @@ dialog.open-document {
     border-right: solid 1px;
     @include darkOrLight(border-right-color, 'emphasis');
     padding-left: 3px;
+    &::before {
+      content: attr(title);
+      text-overflow: ellipsis;
+      overflow-x: hidden;
+    }
   }
   div.list-item-size {
     flex-basis: 5em;
@@ -84,10 +88,16 @@ dialog.open-document {
     @include darkOrLight(border-right-color, 'emphasis');
     padding-right: 3px;
     justify-content: flex-end;
+    &::before {
+      content: attr(data-content);
+    }
   }
   div.list-item-last-modified {
     flex-basis: 10em;
     padding-left: 3px;
+    &::before {
+      content: attr(data-content);
+    }
   }
   div.list-item-buttons {
     justify-content: space-around;

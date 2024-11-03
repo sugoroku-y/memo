@@ -220,15 +220,15 @@ function openDocumentDialog(currentDocumentId?: string) {
           },
         },
       })/* html */ `
-          <div class="list-item-title" title="${title}">${title}</div>
-          <div class="list-item-size">${
+          <div class="list-item-title" title="${title}"></div>
+          <div class="list-item-size" data-content="${
             // メモのサイズ(圧縮・暗号化後)
             size ? String(size).replace(/(?<=\d)(?:=(?:\d{3})+$)/g, ',') : '-'
-          }</div>
-          <div class="list-item-last-modified">${
+          }"></div>
+          <div class="list-item-last-modified" data-content="${
             // 最終更新日時
             formatDate('YYYY-MM-DD hh:mm', lastModified)
-          }</div>
+          }"></div>
           <div class="list-item-buttons">
             <button type="button" name="open" title="開く" autofocus>
               <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
