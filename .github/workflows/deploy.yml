@@ -24,6 +24,9 @@ jobs:
           cp css/*.css data/css/
           cp manifest.json data/
           cp icon.svg data/
+          mkdir data/images
+          cp images/wide.png data/images/
+          cp images/narrow.png data/images/
       - name: Archive production artifacts
         uses: actions/upload-pages-artifact@v3
         with:
