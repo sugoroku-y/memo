@@ -3,6 +3,9 @@
   "editor.formatOnSave": true,
   "prettier.arrowParens": "avoid",
   "typescript.tsdk": "node_modules/typescript/lib",
+  "markdownlint.config": {
+    "MD038": false
+  },
   "svg-preview-on-code.preset": {
     "stroke": "currentColor",
     "stroke-width": "2",
