@@ -33,11 +33,16 @@ async function passwordPrompt(
           viewBox="0 0 24 24"
           xmlns="http://www.w3.org/2000/svg">
         <path
+          d="M1 12a12 13 0 0 1 22 0a12 13 0 0 1-22 0"
+          fill="currentColor"
+          filter="invert(1)"
+          stroke="none"/>
+        <path
           d="M1 12a12 13 0 0 1 22 0a12 13 0 0 1-22 0m2 0a10 11 0 0 1 18 0a10 11 0 0 1-18 0m9-4a4 4 0 1 0 4 4a4 4 0 0 0-4-4m0 1a3 3 0 0 1 3 3a1 1 0 0 1-2 0a1 1 0 0 0-1-1a1 1 0 0 1 0-2"
           fill="currentColor"
           fill-rule="evenodd"
           stroke="none"/>
-        <path d="M4 20l16-16"/>
+        <path d="M4 20l16-16" stroke="currentColor" stroke-width="4"/>
       </svg>
     </div>
     <summary></summary>
