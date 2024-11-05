@@ -669,17 +669,8 @@ async function prepareEditor(root: HTMLDivElement) {
           }
           break;
         case 'a':
-          {
-            // aタグはhref以外の属性を除去
-            for (const {localName} of elm.attributes) {
-              if (localName === 'href') {
-                continue;
-              }
-              elm.removeAttribute(localName);
-            }
-            // styleはattributesに並ばないので特別扱い
-            elm.removeAttribute('style');
-          }
+          // aタグはhref以外の属性を除去
+          cleanupElement(elm, {keeps: ['href']});
           break;
         case 'h1':
         case 'h2':
@@ -922,10 +913,8 @@ async function prepareEditor(root: HTMLDivElement) {
     // 余計な属性・要素を除去
     for (const e of source.querySelectorAll('*')) {
       e.removeAttribute('data-document-id');
-      e.removeAttribute('style');
       if (
         ![
-          // サポート外の要素は除去
           'em',
           'strike',
           'strong',
@@ -944,43 +933,57 @@ async function prepareEditor(root: HTMLDivElement) {
           'li',
           'div',
           'img',
-        ].includes(e.localName) ||
-        // https以外へのリンクは除去
-        (e.localName === 'a' &&
-          (!e.hasAttribute('href') ||
-            !e.getAttribute('href')?.startsWith('https://'))) ||
-        // dataスキーム以外の画像は除去
-        (e.localName === 'img' &&
-          (!e.hasAttribute('src') ||
-            !e.getAttribute('src')?.startsWith('data:')))
+        ].includes(e.localName)
       ) {
+        // サポート外の要素は除去
         e.replaceWith(...e.childNodes);
         continue;
       }
       if (e.localName === 'a') {
-        // href以外の属性は除去
-        for (const a of e.attributes) {
-          if (a.name !== 'href') {
-            e.removeAttribute(a.name);
-          }
+        const anchor = e as HTMLAnchorElement;
+        if (!anchor.href || !anchor.href.startsWith('https://')) {
+          // https以外へのリンクは除去
+          e.replaceWith(...e.childNodes);
+          continue;
         }
-        // スタイル指定は除去
-        e.removeAttribute('style');
+        // href以外の属性は除去
+        cleanupElement(e, {keeps: ['href']});
         // 別タブで開く
-        e.setAttribute('target', '_blank');
+        anchor.target = '_blank';
         // リンク先に不要な情報を渡さない
-        e.setAttribute('rel', 'nofollow noopener noreferrer');
+        anchor.rel = 'nofollow noopener noreferrer';
         continue;
       }
       if (e.localName === 'img') {
-        // src/width/height以外の属性は除去
-        for (const a of e.attributes) {
-          if (!['src', 'width', 'height'].includes(a.name)) {
-            e.removeAttribute(a.name);
+        const img = e as HTMLImageElement;
+        BLOCK: {
+          if (img.src.startsWith('data:')) {
+            // dataスキームはOK
+            break BLOCK;
           }
+          if (
+            img.src.startsWith(
+              'https://file+.vscode-resource.vscode-cdn.net/'
+            ) &&
+            'src' in img.dataset &&
+            img.dataset.src &&
+            'vscodeContext' in img.dataset &&
+            img.dataset.vscodeContext
+          ) {
+            // VSCodeのプレビュー内画像もOKだけど、画像の所在はdatasetから取得
+            const base = JSON.parse(img.dataset.vscodeContext ?? {}).resource;
+            if (base) {
+              const srcUrl = new URL(img.dataset.src, base);
+              img.src = srcUrl.toString();
+              break BLOCK;
+            }
+          }
+          // dataスキーム、VSCode内プレビュー以外の画像は除去
+          e.replaceWith(...e.childNodes);
+          continue;
         }
-        // スタイル指定は除去
-        e.removeAttribute('style');
+        // src/width/height以外の属性は除去
+        cleanupElement(e, {keeps: ['src', 'width', 'height']});
         continue;
       }
       if (
@@ -988,6 +991,7 @@ async function prepareEditor(root: HTMLDivElement) {
         e.parentElement !== source &&
         e.parentElement?.localName === 'div'
       ) {
+        // div要素が重なっていたら(ルートを除く)
         if (!e.previousSibling) {
           // eが先頭なら親の前に
           e.parentElement.before(e);
@@ -1005,6 +1009,8 @@ async function prepareEditor(root: HTMLDivElement) {
           e.parentElement.remove();
         }
       }
+      // すべての属性を削除
+      cleanupElement(e);
     }
     // サポート外の要素除去などにより隣接するようになったテキストノードを連結
     source.normalize();
@@ -1161,4 +1167,24 @@ function openHash(hash?: string) {
   const url = hash ? `${location.pathname}#${hash}` : location.pathname;
   documentId = undefined;
   location.replace(url);
+}
+
+function cleanupElement(element: Element, {keeps}: {keeps?: string[]} = {}) {
+  element.removeAttribute('style');
+  element.removeAttribute('id');
+  if (
+    'dataset' in element &&
+    typeof element.dataset === 'object' &&
+    element.dataset
+  ) {
+    for (const key of Object.keys(element.dataset)) {
+      delete element.dataset[key as keyof typeof element.dataset];
+    }
+  }
+  for (const name of element.getAttributeNames()) {
+    if (keeps?.includes(name)) {
+      continue;
+    }
+    element.removeAttribute(name);
+  }
 }
