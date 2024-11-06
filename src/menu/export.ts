@@ -7,7 +7,16 @@ window.addEventListener('DOMContentLoaded', () => {
           classList: 'export',
           closeable: true,
         })/*html*/ `
+          <textarea style="width:400px;height:300px"></textarea>
         `;
+        const textarea = dlg.querySelector('textarea')!;
+        textarea.value = toMarkdown(contentBox, '')
+          // 表の前後には改行を入れる
+          .replace(/(?<!\n|\|)(?=\n[ \t]*\|)|(?<=\|\n)(?!\n|[ \t]*\|)/g, '\n')
+          // 連続した空行はひとつに
+          .replace(/\n{3,}/g, '\n\n')
+          // 末尾の改行はひとつだけ、末尾が改行でなくても改行を追加
+          .replace(/(?:\n{2,}|(?<!\n))$/, '\n');
         showModal(dlg);
       },
     },

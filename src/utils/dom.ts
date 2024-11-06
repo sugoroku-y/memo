@@ -236,3 +236,163 @@ function showModal(dialog: HTMLDialogElement) {
     });
   });
 }
+
+function childrenToMarkdown(element: Element, indent: string): string {
+  return ''.concat(
+    ...(function* () {
+      for (const child of element.childNodes) {
+        const text = asText(child);
+        if (text) {
+          yield text.data.replace(/&nbsp;/g, ' ');
+          continue;
+        }
+        const elm = asElement(child);
+        if (!elm) {
+          continue;
+        }
+        yield toMarkdown(elm as HTMLElement, indent);
+      }
+    })()
+  );
+}
+
+function listToMarkdown(
+  element: Element,
+  indent: string,
+  makePrefix: (i: number) => string
+): string {
+  return ''.concat(
+    ...(function* () {
+      let i = 1;
+      let prefix = indent + ' '.repeat(makePrefix(0).length);
+      for (const child of element.childNodes) {
+        const elm = asElement(child);
+        prefix = indent + makePrefix(i++);
+        switch (elm?.localName) {
+          case 'li':
+            {
+              const text = `${prefix}${childrenToMarkdown(
+                child as HTMLElement,
+                ' '.repeat(prefix.length)
+              )}`
+                .replace(/^[ \t]+$/gm, '')
+                .replace(/(?<!  )\n*$/, '\n');
+              yield text;
+            }
+            continue;
+          case 'ol':
+          case 'ul':
+            yield `${listToMarkdown(
+              child as HTMLElement,
+              ' '.repeat(prefix.length),
+              elm.localName === 'ul' ? () => '- ' : i => `${i}. `
+            )}`.replace(/\n*$/, '\n');
+            continue;
+        }
+      }
+    })()
+  );
+}
+
+function toMarkdown(element: HTMLElement, indent: string): string {
+  switch (element.localName) {
+    case 'th':
+    case 'td':
+    case 'p':
+    case 'div': {
+      const text = childrenToMarkdown(element, indent);
+      return text.replace(/(?:(?:  )?\n)?$/, '\n\n');
+    }
+    case 'img': {
+      const img = element as HTMLImageElement;
+      return `![${img.alt || img.title || ''}](${img.src})`;
+    }
+    case 'a': {
+      const anchor = element as HTMLAnchorElement;
+      return `[${childrenToMarkdown(element, indent)}](${anchor.href})`;
+    }
+    case 'input': {
+      const input = element as HTMLInputElement;
+      if (input.type !== 'checkbox') {
+        throw new Error(input.type);
+      }
+      return input.checked ? '[x] ' : '[ ] ';
+    }
+    case 'br':
+      return `  \n${indent}`;
+    case 'hr':
+      return `\n${indent}---\n${indent}`;
+    case 'em':
+      return `*${childrenToMarkdown(element, indent)}*`;
+    case 'strong':
+      return `**${childrenToMarkdown(element, indent)}**`;
+    case 'strike':
+      return `~~${childrenToMarkdown(element, indent)}~~`;
+    case 'code': {
+      const text = childrenToMarkdown(element, indent);
+      return text.includes('`') ? `\`\` ${text} \`\`` : `\`${text}\``;
+    }
+    case 'h1': {
+      const text = childrenToMarkdown(element, indent);
+      return `# ${text.replace(/^#+[ \xa0]/, '')}\n\n`;
+    }
+    case 'h2': {
+      const text = childrenToMarkdown(element, indent);
+      return `## ${text.replace(/^#+[ \xa0]/, '')}\n\n`;
+    }
+    case 'h3': {
+      const text = childrenToMarkdown(element, indent);
+      return `### ${text.replace(/^#+[ \xa0]/, '')}\n\n`;
+    }
+    case 'h4': {
+      const text = childrenToMarkdown(element, indent);
+      return `#### ${text.replace(/^#+[ \xa0]/, '')}\n\n`;
+    }
+    case 'h5': {
+      const text = childrenToMarkdown(element, indent);
+      return `##### ${text.replace(/^#+[ \xa0]/, '')}\n\n`;
+    }
+    case 'h6': {
+      const text = childrenToMarkdown(element, indent);
+      return `###### ${text.replace(/^#+[ \xa0]/, '')}\n\n`;
+    }
+    case 'ol':
+      return listToMarkdown(element, indent, i => `${i}. `) + '\n';
+    case 'ul':
+      return listToMarkdown(element, indent, i => `- `) + '\n';
+    case 'pre':
+      return `${indent}\`\`\`plaintext\n${element.innerText.replace(
+        /\n/g,
+        `\n${indent}`
+      )}\n${indent}\`\`\`\n\n`;
+    case 'table': {
+      const header = element.querySelector('tr')?.querySelectorAll('th,td');
+      if (!header) {
+        return '';
+      }
+      return `\n${indent}|${[...header]
+        .map(td =>
+          toMarkdown(td, '').replace(/\n+$/, '').replace(/ *\n/g, '<br>')
+        )
+        .join('|')}|\n${indent}|${[...header]
+        .map(() => '-')
+        .join('|')}|\n`.concat(
+        ...(function* () {
+          for (const tr of (
+            element as ParentNode
+          ).querySelectorAll<HTMLTableRowElement>('tr:nth-of-type(n+2)')) {
+            yield `${indent}|${[...tr.querySelectorAll('th,td')]
+              .map(td =>
+                toMarkdown(td, '').replace(/\n+$/, '').replace(/\n/g, '<br>')
+              )
+              .join('|')}|\n`;
+          }
+        })(),
+        '\n'
+      );
+    }
+    default:
+      // 未対応のタグは無視
+      return '';
+  }
+}
