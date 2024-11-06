@@ -283,10 +283,10 @@ const keymap: Record<string, (root: HTMLDivElement) => boolean> = {
         // テーブルの次があればそちらに移動
         next = table.nextSibling;
       } else {
-        // なければdivを追加してそちらに移動
-        const div = element('div')`<br/>`;
-        table.after(div);
-        next = div;
+        // なければpを追加してそちらに移動
+        const p = element('p')`<br/>`;
+        table.after(p);
+        next = p;
       }
     }
     sel.setPosition(next, 0);
@@ -605,7 +605,7 @@ async function prepareEditor(root: HTMLDivElement) {
     if (!root.firstChild) {
       // contentBoxが空になったら<p><br></p>を挿入
       root.append(element('p')`<br>`);
-      // 挿入したdivにキャレットを移す
+      // 挿入したpにキャレットを移す
       sel.setPosition(root.firstChild, 0);
       return;
     }
@@ -637,7 +637,6 @@ async function prepareEditor(root: HTMLDivElement) {
       }
       switch (elm.localName) {
         case 'p':
-        case 'div':
         case 'li':
           {
             const br = elm.querySelector('br:first-child:last-child');
@@ -664,7 +663,7 @@ async function prepareEditor(root: HTMLDivElement) {
                   break BLOCK;
                 }
               }
-              // div/liが文字装飾要素だけのbrを子孫に持つ場合はbrだけを残す
+              // p/liが文字装飾要素だけのbrを子孫に持つ場合はbrだけを残す
               elm.firstChild?.replaceWith(br);
             }
           }
@@ -679,14 +678,15 @@ async function prepareEditor(root: HTMLDivElement) {
         case 'h4':
         case 'h5':
         case 'h6':
+        case 'div':
         case 'pre':
           if (elm.firstChild === elm.lastChild) {
             const child = asElement(elm.firstChild);
             if (child?.localName === 'br') {
-              // h*、preがbr要素1つだけを子に持つ場合はpに差し替え
-              const div = element('p')`<br>`;
-              elm.replaceWith(div);
-              sel.setPosition(div, 0);
+              // h*、pre、divがbr要素1つだけを子に持つ場合はpに差し替え
+              const p = element('p')`<br>`;
+              elm.replaceWith(p);
+              sel.setPosition(p, 0);
             }
           }
           break;
@@ -704,10 +704,10 @@ async function prepareEditor(root: HTMLDivElement) {
         case 'br':
           if (elm.parentElement === root) {
             // ルート直下にあるbrはpタグの中に入れる
-            const div = document.createElement('p');
-            elm.replaceWith(div);
-            div.append(elm);
-            sel.setPosition(div, 0);
+            const p = document.createElement('p');
+            elm.replaceWith(p);
+            p.append(elm);
+            sel.setPosition(p, 0);
           }
           break;
       }
@@ -722,12 +722,12 @@ async function prepareEditor(root: HTMLDivElement) {
         continue;
       }
       if (parent === root) {
-        const div = document.createElement('p');
-        target.replaceWith(div);
-        div.append(target);
-        parent = div;
+        const p = document.createElement('p');
+        target.replaceWith(p);
+        p.append(target);
+        parent = p;
       }
-      if (!['div', 'li'].includes(parent.localName)) {
+      if (!['p', 'div', 'li'].includes(parent.localName)) {
         continue;
       }
       if (!target.isConnected) {
@@ -817,21 +817,21 @@ async function prepareEditor(root: HTMLDivElement) {
       const {anchorNode, anchorOffset, focusNode, focusOffset} = sel;
       const range = sel.rangeCount > 0 ? sel.getRangeAt(0) : undefined;
       let modified;
-      for (const div of document.querySelectorAll('#contentBox > *')) {
-        if (!/^(?:h([123456])|div)$/.test(div.localName)) {
+      for (const p of document.querySelectorAll('#contentBox > *')) {
+        if (!/^(?:h([123456])|div|p)$/.test(p.localName)) {
           continue;
         }
-        const current = Number(div.localName.charAt(1)) || 0;
+        const current = Number(p.localName.charAt(1)) || 0;
         const actual =
-          asText(div.firstChild)?.data.match(/^#{1,6}(?=[ \xa0])/)?.[0]
-            .length ?? 0;
+          asText(p.firstChild)?.data.match(/^#{1,6}(?=[ \xa0])/)?.[0].length ??
+          0;
         if (current === actual) {
           continue;
         }
-        if ((range && range.intersectsNode(div)) || div.contains(focusNode)) {
+        if ((range && range.intersectsNode(p)) || p.contains(focusNode)) {
           modified = true;
         }
-        replace(document.createElement(actual ? `h${actual}` : 'div'), div);
+        replace(document.createElement(actual ? `h${actual}` : 'p'), p);
       }
       if (modified) {
         // キャレットのあるノード自体は変化していないがノードの位置が変更になっているので設定し直す
@@ -861,9 +861,9 @@ async function prepareEditor(root: HTMLDivElement) {
         e.removeAttribute('data-document-id');
       }
       for (const e of source.querySelectorAll('h1,h2,h3,h4,h5,h6')) {
-        const div = document.createElement('div');
-        div.append(...e.childNodes);
-        e.replaceWith(div);
+        const p = document.createElement('p');
+        p.append(...e.childNodes);
+        e.replaceWith(p);
       }
       ev.dataTransfer.setData('text/html', source.innerHTML);
     }
@@ -998,9 +998,9 @@ async function prepareEditor(root: HTMLDivElement) {
           e.parentElement.after(e);
         } else {
           // eの後ろを新しい要素に移してeと新しい要素を親の後ろに
-          const div = document.createElement('p');
-          div.append(...safeSiblings(e.nextSibling));
-          e.parentElement.after(e, div);
+          const p = document.createElement('p');
+          p.append(...safeSiblings(e.nextSibling));
+          e.parentElement.after(e, p);
         }
         if (!e.parentElement.firstChild) {
           // 親が空っぽになったら削除
@@ -1118,10 +1118,10 @@ function moveLine(
           !['ul', 'ol'].includes(parent.parentElement.localName))
       ) {
         // 親の親がリストでなければpに置き換え
-        const div = document.createElement('p');
-        div.append(...line.childNodes);
+        const p = document.createElement('p');
+        p.append(...line.childNodes);
         line.remove();
-        line = div;
+        line = p;
       }
       // 親の隣に移動
       parent[direction === 'forward' ? 'after' : 'before'](line);
@@ -1151,7 +1151,7 @@ function copyLine(direction: 'forward' | 'backword'): boolean {
   }
   // キャレットの位置を記憶
   const {focusNode, focusOffset} = sel;
-  const line = closest(focusNode, 'div,li');
+  const line = closest(focusNode, 'p,div,li');
   if (!line) {
     return false;
   }
