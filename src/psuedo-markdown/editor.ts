@@ -1067,8 +1067,8 @@ function moveLine(
   }
   // キャレットの位置を記憶
   const {focusNode, focusOffset} = sel;
-  let line = closest(focusNode, 'li,div,h1,h2,h3,h4,h5,h6');
-  if (!line) {
+  let line = closest(focusNode, 'li,div,p,h1,h2,h3,h4,h5,h6');
+  if (!line || line === root) {
     return false;
   }
   // リストの項目上にキャレットがあればリストの項目を移動
