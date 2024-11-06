@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/web-manifest-combined.json",
   "short_name": "Memo",
-  "name": "メモ書き",
+  "name": "メモがき",
   "description": "メモを書くためのアプリケーションです。",
   "display": "standalone",
   "start_url": "./",
