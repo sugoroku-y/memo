@@ -1,6 +1,6 @@
 dialog {
-  @include darkOrLight(background-color, 'background');
-  @include darkOrLight(color, 'foreground');
+  background-color: var(--background);
+  color: var(--foreground);
   padding: 0.5em;
   border: none;
   border-radius: 1em;
@@ -35,20 +35,20 @@ dialog {
         justify-self: flex-end;
       }
       &:hover {
-        @include darkOrLight(background-color, 'button-background');
+        background-color: var(--button-background);
       }
     }
   }
 
   // 標準のbackdropはdarkモードを考慮されていないので修正
   &::backdrop {
-    @include darkOrLight(background-color, 'backdrop');
+    background-color: var(--backdrop);
   }
 
   // 標準のinputもdarkモードを考慮されていないので修正
   input {
-    @include darkOrLight(color, 'foreground');
-    @include darkOrLight(background-color, 'background');
+    color: var(--foreground);
+    background-color: var(--background);
   }
 }
 

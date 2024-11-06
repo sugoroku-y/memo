@@ -1,6 +1,6 @@
 button {
-  @include darkOrLight(color, 'button-foreground');
-  @include darkOrLight(background-color, 'button-background');
+  color: var(--button-foreground);
+  background-color: var(--button-background);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -15,14 +15,14 @@ button {
     border-left: none;
     border-bottom: solid 1px;
     border-right: solid 1px;
-    @include darkOrLight(border-bottom-color, 'button-shadow');
-    @include darkOrLight(border-right-color, 'button-shadow');
+    border-bottom-color: var(--button-shadow);
+    border-right-color: var(--button-shadow);
   }
   &:active {
     border-top: solid 1px;
     border-left: solid 1px;
-    @include darkOrLight(border-top-color, 'button-darkshadow');
-    @include darkOrLight(border-left-color, 'button-darkshadow');
+    border-top-color: var(--button-darkshadow);
+    border-left-color: var(--button-darkshadow);
     border-bottom: none;
     border-right: none;
   }

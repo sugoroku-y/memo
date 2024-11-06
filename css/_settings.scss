@@ -2,8 +2,8 @@ dialog.settings {
   @include title('設定');
   width: fit-content;
   height: fit-content;
-  @include darkOrLight(color, 'foreground');
-  @include darkOrLight(background-color, 'background');
+  color: var(--foreground);
+  background-color: var(--background);
   padding: 0.5em;
   border-radius: 1em;
   > form {

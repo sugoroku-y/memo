@@ -10,8 +10,8 @@
 @import 'settings';
 
 body {
-  @include darkOrLight(background-color, 'background');
-  @include darkOrLight(color, 'foreground');
+  background-color: var(--background);
+  color: var(--foreground);
   font-size: 15px;
   width: 100vw;
   height: 100vh;
@@ -20,16 +20,16 @@ body {
 }
 
 a {
-  @include darkOrLight(color, 'link');
+  color: var(--link);
   &:visited {
-    @include darkOrLight(color, 'visited');
+    color: var(--visited);
   }
 }
 
 pre,
 code,
 th {
-  @include darkOrLight(background-color, 'emphasis');
+  background-color: var(--emphasis);
 }
 
 td {
@@ -37,8 +37,8 @@ td {
   border-bottom: solid 1px;
 }
 td {
-  @include darkOrLight(border-right-color, 'emphasis');
-  @include darkOrLight(border-bottom-color, 'emphasis');
+  border-right-color: var(--emphasis);
+  border-bottom-color: var(--emphasis);
 }
 
 pre {
@@ -49,7 +49,7 @@ pre {
     content: '```';
     display: block;
     margin: 0 -5px;
-    @include darkOrLight(background-color, 'background');
+    background-color: var(--background);
   }
 }
 
@@ -58,7 +58,7 @@ code {
   &::after {
     content: '`';
     display: inline-block;
-    @include darkOrLight(background-color, 'background');
+    background-color: var(--background);
   }
 }
 

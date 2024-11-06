@@ -15,7 +15,7 @@ div#menu {
 
   button {
     pointer-events: none;
-    @include darkOrLight(color, 'foreground');
+    color: var(--foreground);
     background-color: transparent;
     outline: none;
     &:focus-visible {
@@ -29,12 +29,12 @@ div#menu {
   &:hover {
     opacity: 0.9;
     transform: scale(1);
-    @include darkOrLight(background-color, 'background');
+    background-color: var(--background);
     button {
-      @include darkOrLight(color, 'button-foreground');
+      color: var(--button-foreground);
       pointer-events: auto;
       &:hover {
-        @include darkOrLight(background-color, 'button-background');
+        background-color: var(--button-background);
       }
     }
   }

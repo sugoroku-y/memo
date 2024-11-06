@@ -8,18 +8,18 @@ dialog.open-document {
   div.list {
     width: 100%;
     height: 100%;
-    @include darkOrLight(background-color, 'list');
+    background-color: var(--list);
     display: flex;
     flex-flow: column;
     overflow-y: auto;
     position: relative;
     &:focus-visible {
-      @include darkOrLight(border-color, 'button-foreground');
+      border-color: var(--button-foreground);
       outline: none;
     }
 
     // 保存されたメモが1つもないとき
-    &:not(:has(div.list-item)){
+    &:not(:has(div.list-item)) {
       // スクロールバーは非表示
       overflow: hidden;
       // 真ん中にメッセージを表示
@@ -43,7 +43,7 @@ dialog.open-document {
   div.list-item {
     outline: none;
     &:focus-within {
-      @include darkOrLight(background-color, 'list-active');
+      background-color: var(--list-active);
       button {
         opacity: 1;
       }
@@ -69,12 +69,12 @@ dialog.open-document {
     overflow-x: hidden;
     flex: 0 0;
     border-bottom: solid 1px;
-    @include darkOrLight(border-bottom-color, 'emphasis');
+    border-bottom-color: var(--emphasis);
   }
   div.list-item-title {
     flex: 1 1;
     border-right: solid 1px;
-    @include darkOrLight(border-right-color, 'emphasis');
+    border-right-color: var(--emphasis);
     padding-left: 3px;
     &::before {
       content: attr(title);
@@ -85,7 +85,7 @@ dialog.open-document {
   div.list-item-size {
     flex-basis: 5em;
     border-right: solid 1px;
-    @include darkOrLight(border-right-color, 'emphasis');
+    border-right-color: var(--emphasis);
     padding-right: 3px;
     justify-content: flex-end;
     &::before {
@@ -112,7 +112,7 @@ dialog.open-document {
     div.list-item-size,
     div.list-item-last-modified {
       font-weight: bold;
-      @include darkOrLight(background-color, 'list-header');
+      background-color: var(--list-header);
       padding-top: 4px;
       padding-bottom: 2px;
       justify-content: center;
@@ -185,7 +185,7 @@ dialog.open-document {
     border-radius: 1.2em;
   }
   button[value='new'] {
-    @include darkOrLight(background-color, 'list');
+    background-color: var(--list);
     border-radius: 50%;
     padding: 0.5em;
     width: 5em;
