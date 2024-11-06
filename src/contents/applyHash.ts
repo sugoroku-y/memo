@@ -32,7 +32,7 @@ async function applyHash(root: HTMLDivElement) {
   } else {
     root.innerHTML = html/* html */ `
       <h1>${`# ${formatDate(configuration.titleFormat)}`}</h1>
-      <div><br /></div>
+      <p><br /></p>
     `;
     const br = root.querySelector('br')!;
     getSelection()?.setPosition(br.parentElement, 0);

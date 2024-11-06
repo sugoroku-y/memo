@@ -603,8 +603,8 @@ async function prepareEditor(root: HTMLDivElement) {
       return;
     }
     if (!root.firstChild) {
-      // contentBoxが空になったら<div><br></div>を挿入
-      root.append(element('div')`<br>`);
+      // contentBoxが空になったら<p><br></p>を挿入
+      root.append(element('p')`<br>`);
       // 挿入したdivにキャレットを移す
       sel.setPosition(root.firstChild, 0);
       return;
@@ -636,6 +636,7 @@ async function prepareEditor(root: HTMLDivElement) {
         continue;
       }
       switch (elm.localName) {
+        case 'p':
         case 'div':
         case 'li':
           {
@@ -682,8 +683,8 @@ async function prepareEditor(root: HTMLDivElement) {
           if (elm.firstChild === elm.lastChild) {
             const child = asElement(elm.firstChild);
             if (child?.localName === 'br') {
-              // h*、preがbr要素1つだけを子に持つ場合はdivに差し替え
-              const div = element('div')`<br>`;
+              // h*、preがbr要素1つだけを子に持つ場合はpに差し替え
+              const div = element('p')`<br>`;
               elm.replaceWith(div);
               sel.setPosition(div, 0);
             }
@@ -702,8 +703,8 @@ async function prepareEditor(root: HTMLDivElement) {
           break;
         case 'br':
           if (elm.parentElement === root) {
-            // ルート直下にあるbrはdivタグの中に入れる
-            const div = document.createElement('div');
+            // ルート直下にあるbrはpタグの中に入れる
+            const div = document.createElement('p');
             elm.replaceWith(div);
             div.append(elm);
             sel.setPosition(div, 0);
@@ -721,7 +722,7 @@ async function prepareEditor(root: HTMLDivElement) {
         continue;
       }
       if (parent === root) {
-        const div = document.createElement('div');
+        const div = document.createElement('p');
         target.replaceWith(div);
         div.append(target);
         parent = div;
@@ -932,6 +933,7 @@ async function prepareEditor(root: HTMLDivElement) {
           'ol',
           'li',
           'div',
+          'p',
           'img',
         ].includes(e.localName)
       ) {
@@ -986,12 +988,8 @@ async function prepareEditor(root: HTMLDivElement) {
         cleanupElement(e, {keeps: ['src', 'width', 'height']});
         continue;
       }
-      if (
-        e.localName === 'div' &&
-        e.parentElement !== source &&
-        e.parentElement?.localName === 'div'
-      ) {
-        // div要素が重なっていたら(ルートを除く)
+      if (e.localName === 'p' && e.parentElement?.localName === 'p') {
+        // p要素が重なっていたら
         if (!e.previousSibling) {
           // eが先頭なら親の前に
           e.parentElement.before(e);
@@ -1000,7 +998,7 @@ async function prepareEditor(root: HTMLDivElement) {
           e.parentElement.after(e);
         } else {
           // eの後ろを新しい要素に移してeと新しい要素を親の後ろに
-          const div = document.createElement('div');
+          const div = document.createElement('p');
           div.append(...safeSiblings(e.nextSibling));
           e.parentElement.after(e, div);
         }
@@ -1119,8 +1117,8 @@ function moveLine(
         (!parent.parentElement ||
           !['ul', 'ol'].includes(parent.parentElement.localName))
       ) {
-        // 親の親がリストでなければdivに置き換え
-        const div = document.createElement('div');
+        // 親の親がリストでなければpに置き換え
+        const div = document.createElement('p');
         div.append(...line.childNodes);
         line.remove();
         line = div;
