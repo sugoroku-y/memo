@@ -243,7 +243,7 @@ function childrenToMarkdown(element: Element, indent: string): string {
       for (const child of element.childNodes) {
         const text = asText(child);
         if (text) {
-          yield text.data.replace(/&nbsp;/g, ' ');
+          yield text.data.replace(/&nbsp;|\xa0/g, ' ');
           continue;
         }
         const elm = asElement(child);
