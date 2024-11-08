@@ -12,7 +12,7 @@ function openDocumentDialog(currentDocumentId?: string) {
     column: 'lastModified',
     direction: 'prev',
   };
-  const dlg = dialog({
+  openModalDialog({
     classList: 'open-document',
     // メモを開いていない状態のときは閉じるボタン、Escapeキーで閉じないようにする
     closeable: currentDocumentId != null,
@@ -45,7 +45,7 @@ function openDocumentDialog(currentDocumentId?: string) {
         true,
       ],
       pointerleave: [
-        ev => {
+        function (ev) {
           const focusButton = document.activeElement?.closest('button');
           if (!focusButton) {
             // ボタンがフォーカスを持っていなければ何もしない
@@ -61,11 +61,11 @@ function openDocumentDialog(currentDocumentId?: string) {
             return;
           }
           // フォーカスをダイアログに移す
-          dlg.focus();
+          this.focus();
         },
         true,
       ],
-      keydown: ev => {
+      keydown(ev) {
         switch (
           `${ev.key.length > 1 && ev.shiftKey ? 'shift+' : ''}${
             ev.ctrlKey ? 'ctrl+' : ''
@@ -73,11 +73,11 @@ function openDocumentDialog(currentDocumentId?: string) {
         ) {
           case 'ArrowUp':
             // ↑が押されたら逆順で次の項目を選択
-            selectNextItem('backword') && ev.preventDefault();
+            selectNextItem(this, 'backword') && ev.preventDefault();
             return;
           case 'ArrowDown':
             // ↓が押されたら正順で次の項目を選択
-            selectNextItem('forward') && ev.preventDefault();
+            selectNextItem(this, 'forward') && ev.preventDefault();
             return;
           case 'Delete':
             // フォーカスのある項目を削除
@@ -95,14 +95,63 @@ function openDocumentDialog(currentDocumentId?: string) {
             return;
         }
       },
-      close: () => {
-        if (dlg.returnValue !== 'new') {
+      close() {
+        if (this.returnValue !== 'new') {
           // 新しいメモを開くボタン以外のsubmitは何もしないで閉じる
           return;
         }
         // 新しいメモを開く
         openHash();
       },
+    },
+    initialize() {
+      const list = this.querySelector('div.list')!;
+      const header = list.firstElementChild as HTMLDivElement;
+      header.addEventListener('click', ev => {
+        const classname = (
+          [
+            'list-item-title',
+            'list-item-size',
+            'list-item-last-modified',
+          ] as const
+        ).find(token => (ev.target as HTMLElement).classList.contains(token));
+        if (!classname) {
+          return;
+        }
+        sortOrder.column = (
+          {
+            'list-item-title': 'title',
+            'list-item-size': 'size',
+            'list-item-last-modified': 'lastModified',
+          } as const
+        )[classname];
+        if (
+          header.getAttribute('data-column') === sortOrder.column ||
+          (sortOrder.column === 'lastModified' &&
+            !header.hasAttribute('data-column'))
+        ) {
+          if (header.getAttribute('data-direction') === 'next') {
+            header.removeAttribute('data-direction');
+            sortOrder.direction = 'prev';
+          } else {
+            header.setAttribute('data-direction', 'next');
+            sortOrder.direction = 'next';
+          }
+        } else {
+          header.setAttribute('data-column', sortOrder.column);
+          if (sortOrder.column === 'title') {
+            // タイトルだけは昇順をデフォルトとする
+            header.setAttribute('data-direction', 'next');
+            sortOrder.direction = 'next';
+          } else {
+            header.removeAttribute('data-direction');
+            sortOrder.direction = 'prev';
+          }
+        }
+        reloadList(this, list, footer);
+      });
+      const footer = list.lastElementChild as HTMLDivElement;
+      reloadList(this, list, footer);
     },
   })/*html*/ `
     <div class="list">
@@ -120,52 +169,12 @@ function openDocumentDialog(currentDocumentId?: string) {
       </div>
     </div>
   `;
-  const list = dlg.querySelector('div.list')!;
-  const header = list.firstElementChild as HTMLDivElement;
-  header.addEventListener('click', ev => {
-    const classname = (
-      ['list-item-title', 'list-item-size', 'list-item-last-modified'] as const
-    ).find(token => (ev.target as HTMLElement).classList.contains(token));
-    if (!classname) {
-      return;
-    }
-    sortOrder.column = (
-      {
-        'list-item-title': 'title',
-        'list-item-size': 'size',
-        'list-item-last-modified': 'lastModified',
-      } as const
-    )[classname];
-    if (
-      header.getAttribute('data-column') === sortOrder.column ||
-      (sortOrder.column === 'lastModified' &&
-        !header.hasAttribute('data-column'))
-    ) {
-      if (header.getAttribute('data-direction') === 'next') {
-        header.removeAttribute('data-direction');
-        sortOrder.direction = 'prev';
-      } else {
-        header.setAttribute('data-direction', 'next');
-        sortOrder.direction = 'next';
-      }
-    } else {
-      header.setAttribute('data-column', sortOrder.column);
-      if (sortOrder.column === 'title') {
-        // タイトルだけは昇順をデフォルトとする
-        header.setAttribute('data-direction', 'next');
-        sortOrder.direction = 'next';
-      } else {
-        header.removeAttribute('data-direction');
-        sortOrder.direction = 'prev';
-      }
-    }
-    reloadList();
-  });
-  const footer = list.lastElementChild as HTMLDivElement;
-  reloadList();
-  showModal(dlg);
 
-  async function reloadList() {
+  async function reloadList(
+    dlg: HTMLDialogElement,
+    list: HTMLDivElement,
+    footer: HTMLDivElement
+  ) {
     for (const item of list.querySelectorAll('div.list-item')) {
       item.remove();
     }
@@ -274,7 +283,10 @@ function openDocumentDialog(currentDocumentId?: string) {
    * 選択項目の次を選択する
    * @param direction 次の方向を指定する
    */
-  function selectNextItem(direction: 'forward' | 'backword') {
+  function selectNextItem(
+    dlg: HTMLDialogElement,
+    direction: 'forward' | 'backword'
+  ) {
     const selected = document.activeElement?.closest(`.list div.list-item`);
     const item = selected
       ? // 選択している項目があればその次の項目を選択
@@ -282,7 +294,7 @@ function openDocumentDialog(currentDocumentId?: string) {
           `${direction === 'forward' ? 'next' : 'previous'}ElementSibling`
         ] as HTMLElement)
       : // 選択していない状態のときは先頭を選択
-        list.querySelector('.list-item');
+        dlg.querySelector('.list-item');
     if (!item?.classList.contains('list-item')) {
       // 念のため項目かどうかを確認。項目でなければ選択を変更しない。
       return false;

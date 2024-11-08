@@ -2,10 +2,57 @@ window.addEventListener('DOMContentLoaded', () => {
   menu.append(element('button', {
     properties: {id: 'settings', tabIndex: -1, title: '設定'},
     listeners: {
-      click: () => {
-        const settings = dialog({
+      click() {
+        openModalDialog({
           classList: 'settings',
           closeable: true,
+          initialize() {
+            // 初期タイトル
+            const titleFormatField = this.querySelector('input:not([type])')!;
+            titleFormatField.value = configuration.titleFormat;
+            titleFormatField.addEventListener('change', () => {
+              configuration.titleFormat = titleFormatField.value;
+            });
+            // 公開鍵暗号を使う
+            const usePublicKeyMethodCheckbox = this.querySelector(
+              'label > input[type=checkbox]'
+            )!;
+            usePublicKeyMethodCheckbox.checked =
+              configuration.usePublicKeyMethod;
+            usePublicKeyMethodCheckbox.addEventListener('change', () => {
+              if (
+                !configuration.updateUsePublicKeyMethod(
+                  usePublicKeyMethodCheckbox.checked
+                )
+              ) {
+                return;
+              }
+              (async () => {
+                const answer = await confirmDialog(
+                  '再起動するまで設定は反映されません。再起動しますか?'
+                );
+                if (answer === 'yes') {
+                  location.href = location.pathname;
+                }
+              })();
+            });
+            // 共通鍵/パスワードのリセット
+            this.querySelector('button[name="key-reset"]')!.addEventListener(
+              'click',
+              () => {
+                (async () => {
+                  const answer = await confirmDialog(
+                    `${
+                      configuration.usePublicKeyMethod ? '共通鍵' : 'パスワード'
+                    }をリセットして再読込しますか?`
+                  );
+                  if (answer === 'yes') {
+                    configuration.resetCryptoKey();
+                  }
+                })();
+              }
+            );
+          },
         })/*html*/ `
           <label>初期タイトル</label><input />
           <label><input type="checkbox">公開鍵暗号を使う</label>
@@ -13,50 +60,6 @@ window.addEventListener('DOMContentLoaded', () => {
             configuration.usePublicKeyMethod ? '共通鍵' : 'パスワード'
           }のリセット</button>
         `;
-        // 初期タイトル
-        const titleFormatField = settings.querySelector('input:not([type])')!;
-        titleFormatField.value = configuration.titleFormat;
-        titleFormatField.addEventListener('change', () => {
-          configuration.titleFormat = titleFormatField.value;
-        });
-        // 公開鍵暗号を使う
-        const usePublicKeyMethodCheckbox = settings.querySelector(
-          'label > input[type=checkbox]'
-        )!;
-        usePublicKeyMethodCheckbox.checked = configuration.usePublicKeyMethod;
-        usePublicKeyMethodCheckbox.addEventListener('change', () => {
-          if (
-            !configuration.updateUsePublicKeyMethod(
-              usePublicKeyMethodCheckbox.checked
-            )
-          ) {
-            return;
-          }
-          (async () => {
-            const answer = await confirmDialog(
-              '再起動するまで設定は反映されません。再起動しますか?'
-            );
-            if (answer === 'yes') {
-              location.href = location.pathname;
-            }
-          })();
-        });
-        // 共通鍵/パスワードのリセット
-        settings
-          .querySelector('button[name="key-reset"]')!
-          .addEventListener('click', () => {
-            (async () => {
-              const answer = await confirmDialog(
-                `${
-                  configuration.usePublicKeyMethod ? '共通鍵' : 'パスワード'
-                }をリセットして再読込しますか?`
-              );
-              if (answer === 'yes') {
-                configuration.resetCryptoKey();
-              }
-            })();
-          });
-        showModal(settings);
       },
     },
   })/* html */ `

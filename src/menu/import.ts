@@ -2,13 +2,13 @@ window.addEventListener('DOMContentLoaded', () => {
   menu.append(element('button', {
     properties: {id: 'import', tabIndex: -1, title: 'インポート'},
     listeners: {
-      click: () => {
-        const dlg = dialog({
+      click() {
+        openModalDialog({
           classList: 'import',
           closeable: true,
         })/*html*/ `
+        工事中
         `;
-        showModal(dlg);
       },
     },
   })/*html*/ `

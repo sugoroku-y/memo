@@ -80,36 +80,91 @@ function isEndOfLine(node: Node): boolean {
 
 type ENTITY_CHARS = '&' | '<' | '>' | '"';
 
+let cache: {
+  table: Record<ENTITY_CHARS, string>;
+  pattern: RegExp;
+};
 function entityize(s: string): string {
-  return s.replace(entityize.RE, ch => entityize.TABLE[ch as ENTITY_CHARS]);
+  cache ??= (() => {
+    const table = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+    } satisfies Readonly<Record<ENTITY_CHARS, string>>;
+    const pattern = new RegExp(`[${Object.keys(table).join('')}]`, 'g');
+    return {table, pattern};
+  })();
+  return s.replace(cache.pattern, ch => cache.table[ch as ENTITY_CHARS]);
 }
 
-entityize.TABLE = {
-  '&': '&amp;',
-  '<': '&lt;',
-  '>': '&gt;',
-  '"': '&quot;',
-} satisfies Record<ENTITY_CHARS, string>;
-entityize.RE = new RegExp(`[${Object.keys(entityize.TABLE).join('')}]`, 'g');
+function html(template: TemplateStringsArray, ...values: unknown[]): string;
+function html(
+  map: Map<string, Node>
+): (template: TemplateStringsArray, ...values: unknown[]) => string;
+function html(
+  ...args:
+    | [map: Map<string, Node>]
+    | [template: TemplateStringsArray, ...values: unknown[]]
+) {
+  if ('raw' in args[0]) {
+    const [template, ...values] = args;
+    return implement(undefined, template, ...values);
+  }
+  const [map] = args;
+  return (template: TemplateStringsArray, ...values: unknown[]) =>
+    implement(map, template, ...values);
 
-function html(template: TemplateStringsArray, ...values: unknown[]): string {
-  return ''.concat(
-    ...(function* () {
-      const valueIterator = values[Symbol.iterator]();
-      for (const e of template) {
-        yield e.replace(/(?<=^|>)\s+|\s+(?=<|$)/g, '');
-        const {value, done} = valueIterator.next();
-        if (done) {
-          break;
+  function implement(
+    map: Map<string, Node> | undefined,
+    template: TemplateStringsArray,
+    ...values: unknown[]
+  ) {
+    return ''.concat(
+      ...(function* () {
+        const valueIterator = values[Symbol.iterator]();
+        for (const e of template) {
+          yield e.replace(/(?<=^|>)\s+|\s+(?=<|$)/g, '');
+          const {value, done} = valueIterator.next();
+          if (done) {
+            break;
+          }
+          if (value == null) {
+            // nullやundefinedは無視
+            continue;
+          }
+          if (value instanceof Node) {
+            if (!map) {
+              throw new Error();
+            }
+            const id = [1, 2, 3]
+              .map(() => Math.random().toString(36).slice(2))
+              .join('');
+            map.set(id, value);
+            yield `<!--${id}-->`;
+            continue;
+          }
+          yield entityize(String(value));
         }
-        if (value == null) {
-          // nullやundefinedは無視
-          continue;
-        }
-        yield entityize(String(value));
+      })()
+    );
+  }
+}
+function applyNodes(node: Node, map: Map<string, Node>) {
+  function traverse(node: Node) {
+    if (node.nodeType === Node.COMMENT_NODE) {
+      const id = (node as Comment).data;
+      const target = map.get(id);
+      if (target) {
+        node.parentElement?.replaceChild(target, node);
+        map.delete(id);
       }
-    })()
-  );
+    }
+    for (const child of node.childNodes) {
+      traverse(child);
+    }
+  }
+  traverse(node);
 }
 
 type Equal<A, B> = (<T>() => T extends A ? 1 : 0) extends <T>() => T extends B
@@ -133,12 +188,19 @@ interface ElementOptions<N extends keyof HTMLElementTagNameMap> {
   };
   listeners?: {
     [Type in keyof HTMLElementEventMap]?:
-      | ((ev: HTMLElementEventMap[Type]) => void)
+      | ((
+          this: HTMLElementTagNameMap[N],
+          ev: HTMLElementEventMap[Type]
+        ) => void)
       | [
-          (ev: HTMLElementEventMap[Type]) => void,
+          (
+            this: HTMLElementTagNameMap[N],
+            ev: HTMLElementEventMap[Type]
+          ) => void,
           boolean | AddEventListenerOptions
         ];
   };
+  initialize?: (this: HTMLElementTagNameMap[N]) => void;
 }
 
 function element<N extends keyof HTMLElementTagNameMap>(
@@ -181,60 +243,92 @@ function element<N extends keyof HTMLElementTagNameMap>(
         e.addEventListener(type, ...rest);
       }
     }
-    e.innerHTML = html(...args);
+    const map = new Map<string, Node>();
+    e.innerHTML = html(map)(...args);
+    applyNodes(e, map);
+    if (map.size) {
+      throw new Error();
+    }
+    options?.initialize?.call(e);
     return e;
   };
 }
 
-function dialog(
-  options?: ElementOptions<'dialog'> & {title?: string; closeable?: boolean}
-) {
-  return (...args: [TemplateStringsArray, ...unknown[]]) => {
-    const dialog = element('dialog', options)``;
-    dialog.addEventListener('keydown', ev => {
-      if (ev.key !== 'Escape') {
-        // Escape以外はそのまま
-        return;
-      }
-      for (const cancel of dialog.querySelectorAll('button[value=cancel]')) {
-        if (!cancel.disabled) {
-          // 無効でないキャンセルボタンが存在すればEscapeキーを無効化しない
-          return;
-        }
-      }
-      // Escapeキーを無効化
-      ev.preventDefault();
-    });
-    const title = element('div', {
-      classList: 'title',
-      data: {title: options?.title ?? ''},
-    })``;
-    dialog.append(title);
-    if (options?.closeable) {
-      const button = element('button', {
-        properties: {value: 'cancel', tabIndex: -1, title: '閉じる'},
-      })/* html */ `
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-          <path d="M4 4L20 20M4 20L20 4" />
-        </svg>
-      `;
-      button.addEventListener('click', () => dialog.close('cancel')),
-        title.append(button);
-    }
-    dialog.append(element('form', {properties: {method: 'dialog'}})(...args));
-    return dialog;
-  };
+interface DialogOptions<T = string> extends ElementOptions<'dialog'> {
+  title?: string;
+  closeable?: boolean;
+  returnValue?: (this: HTMLDialogElement) => T;
 }
 
-function showModal(dialog: HTMLDialogElement) {
-  document.body.append(dialog);
-  dialog.showModal();
-  return new Promise<string>(resolve => {
-    dialog.addEventListener('close', () => {
-      resolve(dialog.returnValue);
-      dialog.remove();
+function openModalDialog<T>(
+  options: DialogOptions<T>
+): (template: TemplateStringsArray, ...values: unknown[]) => Promise<T>;
+function openModalDialog(
+  options: Omit<DialogOptions, 'returnValue'>
+): (template: TemplateStringsArray, ...values: unknown[]) => Promise<string>;
+function openModalDialog<T>({
+  title = '',
+  closeable,
+  initialize,
+  returnValue,
+  ...options
+}: DialogOptions<T>): (
+  template: TemplateStringsArray,
+  ...values: unknown[]
+) => Promise<T> {
+  return (...args) => {
+    const titleBlock = element('div', {
+      classList: 'title',
+      data: {title},
+    })`${
+      closeable
+        ? element('button', {
+            properties: {value: 'cancel', tabIndex: -1, title: '閉じる'},
+            listeners: {
+              click() {
+                this.closest('dialog')?.close('cancel');
+              },
+            },
+          })/* html */ `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M4 4L20 20M4 20L20 4" />
+            </svg>
+          `
+        : undefined
+    }`;
+    const form = element('form', {properties: {method: 'dialog'}})(...args);
+    const dlg = element('dialog', {
+      ...options,
+      initialize() {
+        this.addEventListener('keydown', ev => {
+          if (ev.key !== 'Escape') {
+            // Escape以外はそのまま
+            return;
+          }
+          for (const cancel of this.querySelectorAll('button[value=cancel]')) {
+            if (!cancel.disabled) {
+              // 無効でないキャンセルボタンが存在すればEscapeキーを無効化しない
+              return;
+            }
+          }
+          // Escapeキーを無効化
+          ev.preventDefault();
+        });
+        initialize?.call(this);
+      },
+    })`
+      ${titleBlock}
+      ${form}
+    `;
+    document.body.append(dlg);
+    dlg.showModal();
+    return new Promise<T>(resolve => {
+      dlg.addEventListener('close', () => {
+        resolve(returnValue ? returnValue.call(dlg) : (dlg.returnValue as T));
+        dlg.remove();
+      });
     });
-  });
+  };
 }
 
 function childrenToMarkdown(element: Element, indent: string): string {

@@ -63,7 +63,7 @@ const configuration = (() => {
       }
       // 共通鍵暗号の場合はパスワードを必要とする
       const password = await passwordPrompt();
-      const key = await generateKey(password);
+      const key = await generateKey(password!);
       // migration
       const oldKeyPair = localStorage.getItem(CRYPTO_KEY_PAIR);
       if (oldKeyPair) {

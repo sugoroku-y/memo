@@ -1,3 +1,10 @@
+interface PasswordPromptOptions {
+  /** パスワードの必須文字数。省略時は5 */
+  minLength?: number;
+  /** パスワードを自動で生成するかどうか。省略時はtrue */
+  automatic?: boolean;
+}
+
 /**
  * パスワード入力ダイアログを表示して入力されたパスワードを返す。
  *
@@ -8,20 +15,42 @@
  * - ESCキーでもダイアログは閉じない。
  * - パスワードが5文字以上入力されていればEnterキーでもダイアログは閉じる
  * @param options パスワード入力時のオプション。省略可
- * @param options.minLength パスワードの必須文字数。省略時は5
  * @returns {Promise<string>} 入力されたパスワード
  */
-async function passwordPrompt(
-  options: {minLength?: number; automatic?: boolean} = {}
-) {
-  const {minLength = 5, automatic = true} = options;
-  const dlg = dialog({
+async function passwordPrompt({
+  minLength = 5,
+  automatic = true,
+}: PasswordPromptOptions = {}) {
+  return openModalDialog({
     classList: 'password-prompt',
-    listeners: {
-      submit: () => {
-        // submitできたらパスワードを返す
-        dlg.close(input.value);
-      },
+    initialize() {
+      const input = this.querySelector('div > input[type=password]')!;
+      const svg = input.nextElementSibling!;
+      if (automatic) {
+        // 自動生成したパスワード
+        input.value = Math.random().toString(36).slice(2);
+        // パスワードを自動生成するときは最初から通常のテキストフィールドにする
+        input.removeAttribute('type'); // 目のアイコンを非表示にするため属性自体を消す
+        input.addEventListener(
+          'input',
+          () => {
+            // パスワードを自動生成したときは、初回の入力でパスワードフィールドに変える
+            input.type = 'password';
+          },
+          {once: true}
+        );
+      }
+      svg.addEventListener('click', () => {
+        // 目のアイコンをクリックすることでパスワード入力フィールドと通常のテキストフィールドを切り替える
+        input.type = input.type === 'password' ? 'text' : 'password';
+      });
+      // ダイアログを開いたときに自動生成したパスワードを選択状態にする
+      queueMicrotask(() => input.select());
+    },
+    returnValue() {
+      return this.returnValue === 'ok'
+        ? this.querySelector('input')?.value
+        : undefined;
     },
   })/* html */ `
     <label></label>
@@ -46,29 +75,6 @@ async function passwordPrompt(
       </svg>
     </div>
     <summary></summary>
-    <button></button>
+    <button value="ok"></button>
   `;
-  const input = dlg.querySelector('div > input[type=password]')!;
-  const svg = input.nextElementSibling!;
-  if (automatic) {
-    // 自動生成したパスワード
-    input.value = Math.random().toString(36).slice(2);
-    // パスワードを自動生成するときは最初から通常のテキストフィールドにする
-    input.removeAttribute('type'); // 目のアイコンを非表示にするため属性自体を消す
-    input.addEventListener(
-      'input',
-      () => {
-        // パスワードを自動生成したときは、初回の入力でパスワードフィールドに変える
-        input.type = 'password';
-      },
-      {once: true}
-    );
-  }
-  svg.addEventListener('click', () => {
-    // 目のアイコンをクリックすることでパスワード入力フィールドと通常のテキストフィールドを切り替える
-    input.type = input.type === 'password' ? 'text' : 'password';
-  });
-  // ダイアログを開いたときに自動生成したパスワードを選択状態にする
-  input.select();
-  return showModal(dlg);
 }
