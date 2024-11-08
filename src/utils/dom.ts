@@ -305,7 +305,7 @@ function toMarkdown(element: HTMLElement, indent: string): string {
     }
     case 'img': {
       const img = element as HTMLImageElement;
-      return `![${img.alt || img.title || ''}](${img.src})`;
+      return `![${img.alt || img.title || 'image'}](${img.src})`;
     }
     case 'a': {
       const anchor = element as HTMLAnchorElement;
