@@ -11,6 +11,8 @@ window.addEventListener('DOMContentLoaded', () => {
         `;
         const textarea = dlg.querySelector('textarea')!;
         textarea.value = toMarkdown(contentBox, '')
+          // 空行の前の末尾の空白は除去
+          .replace(/ +(?=\n\n)/g, '')
           // 表の前後には改行を入れる
           .replace(/(?<!\n|\|)(?=\n[ \t]*\|)|(?<=\|\n)(?!\n|[ \t]*\|)/g, '\n')
           // 連続した空行はひとつに
