@@ -383,7 +383,7 @@ function toMarkdown(element: HTMLElement, indent: string): string {
           ).querySelectorAll<HTMLTableRowElement>('tr:nth-of-type(n+2)')) {
             yield `${indent}|${[...tr.querySelectorAll('th,td')]
               .map(td =>
-                toMarkdown(td, '').replace(/\n+$/, '').replace(/\n/g, '<br>')
+                toMarkdown(td, '').replace(/\n+$/, '').replace(/ *\n/g, '<br>')
               )
               .join('|')}|\n`;
           }
