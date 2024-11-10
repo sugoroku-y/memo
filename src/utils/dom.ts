@@ -187,7 +187,7 @@ interface ElementOptions<N extends keyof HTMLElementTagNameMap> {
       : Key]?: HTMLElementTagNameMap[N][Key];
   };
   listeners?: {
-    [Type in keyof HTMLElementEventMap]?:
+    [Type in keyof HTMLElementEventMap as Type | `${Type}$`]?:
       | ((
           this: HTMLElementTagNameMap[N],
           ev: HTMLElementEventMap[Type]
@@ -240,6 +240,15 @@ function element<N extends keyof HTMLElementTagNameMap>(
           typeof listener === 'function'
             ? [listener as EventListener]
             : (listener as [EventListener, boolean | AddEventListenerOptions]);
+        if (type.endsWith('$')) {
+          const [listener, options] = rest;
+          e.addEventListener(
+            type.slice(0, -1),
+            listener,
+            typeof options === 'object' ? {...options, passive: true} : true
+          );
+          continue;
+        }
         e.addEventListener(type, ...rest);
       }
     }

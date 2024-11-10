@@ -18,53 +18,47 @@ function openDocumentDialog(currentDocumentId?: string) {
     closeable: currentDocumentId != null,
     listeners: {
       // ホバーでフォーカスが移動するようにしておく
-      pointerenter: [
-        ev => {
-          const target = ev.target as HTMLElement;
-          const button = target.closest('button');
-          if (button && button.tabIndex >= 0) {
-            // フォーカスを持つボタンならフォーカス移動して終わり
-            button.focus();
-            return;
-          }
-          const item = target.closest('.list div.list-item');
-          if (!item) {
-            // ボタンでも項目でもなければ何もしない
-            return;
-          }
-          const focusedItem = document.activeElement?.closest(
-            '.list div.list-item'
-          );
-          if (focusedItem === item) {
-            // ホバーされたのがフォーカスのある項目なら何もしない
-            return;
-          }
-          // 項目内のボタンにフォーカスを移動
-          item.querySelector('button')?.focus();
-        },
-        true,
-      ],
-      pointerleave: [
-        function (ev) {
-          const focusButton = document.activeElement?.closest('button');
-          if (!focusButton) {
-            // ボタンがフォーカスを持っていなければ何もしない
-            return;
-          }
-          const target = ev.target as HTMLElement;
-          const item = target.closest('.list div.list-item');
-          const hoverItem = (ev.relatedTarget as HTMLElement)?.closest(
-            '.list div.list-item'
-          );
-          if (item && item === hoverItem) {
-            // ホバーしている項目内での移動では何もしない
-            return;
-          }
-          // フォーカスをダイアログに移す
-          this.focus();
-        },
-        true,
-      ],
+      pointerenter$(ev) {
+        const target = ev.target as HTMLElement;
+        const button = target.closest('button');
+        if (button && button.tabIndex >= 0) {
+          // フォーカスを持つボタンならフォーカス移動して終わり
+          button.focus();
+          return;
+        }
+        const item = target.closest('.list div.list-item');
+        if (!item) {
+          // ボタンでも項目でもなければ何もしない
+          return;
+        }
+        const focusedItem = document.activeElement?.closest(
+          '.list div.list-item'
+        );
+        if (focusedItem === item) {
+          // ホバーされたのがフォーカスのある項目なら何もしない
+          return;
+        }
+        // 項目内のボタンにフォーカスを移動
+        item.querySelector('button')?.focus();
+      },
+      pointerleave$(ev) {
+        const focusButton = document.activeElement?.closest('button');
+        if (!focusButton) {
+          // ボタンがフォーカスを持っていなければ何もしない
+          return;
+        }
+        const target = ev.target as HTMLElement;
+        const item = target.closest('.list div.list-item');
+        const hoverItem = (ev.relatedTarget as HTMLElement)?.closest(
+          '.list div.list-item'
+        );
+        if (item && item === hoverItem) {
+          // ホバーしている項目内での移動では何もしない
+          return;
+        }
+        // フォーカスをダイアログに移す
+        this.focus();
+      },
       keydown(ev) {
         switch (
           `${ev.key.length > 1 && ev.shiftKey ? 'shift+' : ''}${
