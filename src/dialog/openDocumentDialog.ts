@@ -235,17 +235,17 @@ function openDocumentDialog(currentDocumentId?: string) {
           <div class="list-item-buttons">
             <button type="button" name="open" title="開く" autofocus>
               <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M6 22a2 2 0 0 1-2-2v-10m0-4v-2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2h-12M2 8h13m-3 3l3-3-3-3"/>
+                <path d="M6 22a2 2 0 0 1-2-2v-7m0-8v-1a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2h-12M2 9h13m-3 3l3-3-3-3"/>
               </svg>
             </button>
             <button type="button" name="another-tab" title="別タブで開く">
               <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M6 22a2 2 0 0 1-2-2v-10m0-4v-2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10m0 6a2 2 0 0 1-2 2m-6 0h-6M2 8h13m-3 3l3-3-3-3M15 22v-10m-5 5h10"/>
+                <path d="M6 22a2 2 0 0 1-2-2v-7m0-8v-1a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10m-8 8h-6M2 9h13m-3 3l3-3-3-3M16 23v-10m-5 5h10"/>
               </svg>
             </button>
             <button type="button" name="delete" title="削除">
               <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M4 10l3 11a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l3-11m3-2l-18-6 m7.5 2.5a1 1 0 0 1 3 1m-14 2a7 14 0 0 1 10 7l2-2m-2 2l-3-1"/>
+                <path d="M4 10l3 11a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l3-11m3-2l-18-6m6 2a5 2 18 1 1 6 2m-16 2a8 14 0 0 1 12 7l2-2m-2 2l-3-1"/>
               </svg>
             </button>
           </div>
