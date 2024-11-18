@@ -28,7 +28,7 @@ window.addEventListener('DOMContentLoaded', () => {
     },
   })/* html */ `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-      <path d="M3,10a9 9 0 1 0 8-8m4 12l-9-9h4m-4 0v4" />
+      <path d="M2.5 8.8a10 10 0 1 0 9.5-6.8m0 10l-7.2-10-1 4m1-4h4" />
     </svg>
   `);
 });

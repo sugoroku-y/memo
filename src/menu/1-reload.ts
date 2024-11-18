@@ -9,7 +9,7 @@ window.addEventListener('DOMContentLoaded', () => {
     },
   })/*html*/ `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-      <path d="M6.4 4.4a9 9 0 1 0 11.2 0m0 4v-4h4" />
+      <path d="M6 4a10 10 0 1 0 12 0m0 4v-4h4" />
     </svg>
   `);
 });
